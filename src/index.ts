@@ -32,8 +32,8 @@ type CreateElementInternalOptions<K extends keyof HTMLElementTagNameMap> =
     ? HTMLElementTagNameMap[K][key] | HTMLElementTagNameMap[K][key][]
     : HTMLElementTagNameMap[K][key] }
   & {
-      children?: string | HTMLElement[] | Node[] | null | undefined,
-      style?: Partial<CSSStyleDeclaration> | null | undefined,
+    children?: string | HTMLElement[] | Node[] | null | undefined,
+    style?: Partial<CSSStyleDeclaration> | null | undefined,
   };
 
 function createElementInternal<K extends keyof HTMLElementTagNameMap>(
@@ -73,9 +73,20 @@ function createElementInternal<K extends keyof HTMLElementTagNameMap>(
     }else{
       attributes = Object.assign({}, options) as CreateElementInternalOptions<K>;
 
-      if (attributes.children) {
+      if("children" in attributes && "textContent" in attributes){
+        throw new TypeError("Cannot use both 'children' and 'textContent' in options");
+      }
+
+      if ("children" in attributes && attributes.children) {
         children = normalizeChildren(attributes.children);
         delete attributes.children;
+      }else if("textContent" in attributes && attributes.textContent) {
+        if (typeof attributes.textContent !== "string") {
+          throw new TypeError(`Expected string for 'textContent', got ${typeof attributes.textContent}`);
+        }
+
+        children = [window.document.createTextNode(attributes.textContent)];
+        delete attributes.textContent;
       }
     }
   }
@@ -130,9 +141,6 @@ function createElementInternal<K extends keyof HTMLElementTagNameMap>(
 
   return newElement;
 }
-
-interface a { a: "a", b: "b" }
-type A = { [key in keyof a]: string };
 
 const createElement = createElementInternal as typeof createElementInternal & {
   default: unknown,
