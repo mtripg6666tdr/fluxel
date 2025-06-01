@@ -9,7 +9,7 @@ A tiny, type-safe utility to create DOM elements with ease, inspired by React's 
 * **Intuitive API:** Create elements using a simple function call for each HTML tag (e.g., `div()`, `span()`, `img()`).
 * **Flexible Arguments:** Supports passing children directly as a string or array of `HTMLElement`s/`Node`s, or as an `options` object for attributes and children.
 * **Automatic Attribute Assignment:** Assigns element attributes directly from the options object.
-* **Event Listener Handling:** Easily attach single or multiple event handlers using `on` prefixed attributes (e.g., `onClick`, `onMouseOver`).
+* **Event Listener Handling:** Easily attach single or multiple event handlers using `on` prefixed attributes (e.g., `onclick`, `onmouseover`).
 * **Style Support:** Apply inline styles using the `style` property, accepting a `Partial<CSSStyleDeclaration>`.
 
 ---
@@ -99,8 +99,8 @@ function handleAnotherClick() {
 
 const button = createElement.button({
   textContent: 'Click Me!',
-  onClick: [handleClick, handleAnotherClick], // Pass an array of handlers
-  onMouseOver: () => console.log('Mouse over button'),
+  onclick: [handleClick, handleAnotherClick], // Pass an array of handlers
+  onmouseover: () => console.log('Mouse over button'),
 });
 document.body.appendChild(button);
 ```
