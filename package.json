@@ -1,6 +1,6 @@
 {
   "name": "@mtripg6666tdr/create-element",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A simple utility to create HTML elements with attributes and children.",
   "main": "dist/index.js",
   "scripts": {
