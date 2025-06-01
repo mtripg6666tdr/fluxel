@@ -1,5 +1,4 @@
-# `@mtripg6666tdr/create-element`
-
+# @mtripg6666tdr/create-element
 A tiny, type-safe utility to create DOM elements with ease, inspired by React's `createElement` and native browser APIs. This package simplifies the creation of HTML elements by providing a fluent API for common tags and attribute handling.
 
 ---
