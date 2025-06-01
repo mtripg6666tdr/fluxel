@@ -1,0 +1,33 @@
+{
+  "name": "@mtripg6666tdr/create-element",
+  "version": "0.1.0",
+  "description": "A simple utility to create HTML elements with attributes and children.",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "swc --strip-leading-paths -d dist src && tsc",
+    "prebuild": "node ./bakeElement.js",
+    "clean": "rimraf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "mtripg6666tdr",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mtripg6666tdr/create-element.git"
+  },
+  "devDependencies": {
+    "@swc/cli": "^0.6.0",
+    "rimraf": "^6.0.1",
+    "swc": "^1.0.11",
+    "typescript": "^5.7.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}
