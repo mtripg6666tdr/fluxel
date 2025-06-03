@@ -1,61 +1,23 @@
 // Importing the all HTML tag names as a string array from a generated file
+import ReactiveDependency from "./reactiveDependency";
 import tags from "./tags__generated";
+import type { FluxelInternalOptions, ChildrenType, CanBeReactiveMap, CanBeReactive, ChildrenTypeNoReactiveNodes, FluxelInternalOptionsFromNode, StateParam, ReactiveDependencyUse, MemoizeFunction, NarrowReturnType } from "./type";
 
-type NotFunctionProps<T> = {
-  [key in keyof T]: Exclude<T[key], null | undefined> extends Function
-  ? never
-  : key
-}[keyof T];
-
-type FunctionProps<T> = {
-  [key in keyof T]: Exclude<T[key], null | undefined> extends Function
-  ? key
-  : never
-}[keyof T];
-
-type NarrowReturnType<T extends (...args: any[]) => any, Return> = T extends (...args: infer R) => infer OldReturn
-  ? Return extends OldReturn
-  ? (...args: R) => Return
-  : never
-  : never;
-
-type CanBeArray<T> = T | T[];
-type ChildrenType<T extends Node = Node> = CanBeArray<CanBeReactive<string | T>>;
-type ChildrenTypeNoReactiveNodes<T extends Node = Node> = CanBeArray<string | T | ReactiveDependency<string>>;
-
-type CanBeReactiveMap<T> = { [key in keyof T]: CanBeReactive<T[key]> };
-type CanBeReactive<T> = T | ReactiveDependency<T>;
-
-type CreateElementInternalOptions<K extends keyof HTMLElementTagNameMap> =
-  CreateElementInternalOptionsFromNode<HTMLElementTagNameMap[K]>;
-
-type CreateElementInternalOptionsFromNode<K extends Node> =
-  & Omit<{ [key in NotFunctionProps<K>]?: CanBeReactive<K[key]> }, "children" | "style" | "textContent" | "className" | "classList" | "dataset">
-  & { [key in Exclude<FunctionProps<K>, keyof Node>]?: key extends `on${string}`
-    ? K[key] | K[key][]
-    : K[key] }
-  & {
-    children?: ChildrenType | null | undefined,
-    style?: Partial<CanBeReactiveMap<CSSStyleDeclaration>> | null | undefined,
-    classList?: CanBeReactive<string | DOMTokenList | string[] | Set<string>> | CanBeReactive<string>[] | null | undefined,
-    dataset?: Record<string, string | ReactiveDependency<string>> | null | undefined,
-  };
-
-function createElementInternal<K extends keyof HTMLElementTagNameMap>(
+function fluxelInternal<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
   children?: string | (Node | string)[],
 ): HTMLElementTagNameMap[K];
-function createElementInternal<K extends keyof HTMLElementTagNameMap>(
+function fluxelInternal<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
-  options?: CreateElementInternalOptions<K>
+  options?: FluxelInternalOptions<K>
 ): HTMLElementTagNameMap[K];
-function createElementInternal<K extends keyof HTMLElementTagNameMap>(
+function fluxelInternal<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
   options?: HTMLElement,
 ): HTMLElementTagNameMap[K];
-function createElementInternal<K extends keyof HTMLElementTagNameMap>(
+function fluxelInternal<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
-  options?: ChildrenType | CreateElementInternalOptions<K>
+  options?: ChildrenType | FluxelInternalOptions<K>
 ): HTMLElement {
   if (typeof tagName !== "string") {
     throw new TypeError(`Expected string for tagName, got ${typeof tagName}`);
@@ -68,9 +30,9 @@ function createElementInternal<K extends keyof HTMLElementTagNameMap>(
 
 function applyProps<K extends keyof HTMLElementTagNameMap>(
   element: HTMLElementTagNameMap[K],
-  options?: ChildrenType | CreateElementInternalOptions<K>
+  options?: ChildrenType | FluxelInternalOptions<K>
 ): HTMLElement {
-  let attributes: CreateElementInternalOptions<K> | null = null;
+  let attributes: FluxelInternalOptions<K> | null = null;
   let originalChildren: ChildrenType | null = null;
   let children: Node[] | null = null;
   let variableChildrenLength = false;
@@ -84,7 +46,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
       variableChildrenLength = childrenTransformResult.variableChildrenLength;
       reactiveIndex = childrenTransformResult.reactiveIndex;
     } else {
-      attributes = Object.assign(Object.create(null), options) as CreateElementInternalOptions<K>;
+      attributes = Object.assign(Object.create(null), options) as FluxelInternalOptions<K>;
 
       if ("textContent" in attributes) {
         throw new TypeError("textContent is not allowed in createElement options, use children instead");
@@ -101,7 +63,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
     }
   }
 
-  attributes = attributes || {} as CreateElementInternalOptions<K>;
+  attributes = attributes || {} as FluxelInternalOptions<K>;
   children = children || null;
 
   // extrct event handlers
@@ -366,9 +328,9 @@ function normalizeChildren(children: ChildrenType): { children: Node[], variable
   return { children: normalizeChildrenInternal(children), variableChildrenLength, reactiveIndex };
 }
 
-createElementInternal.fragment = function <T extends Node = Node>(
+fluxelInternal.fragment = function <T extends Node = Node>(
   children: ChildrenType<T>,
-  options: CreateElementInternalOptionsFromNode<T>,
+  options: FluxelInternalOptionsFromNode<T>,
 ): Node[] | ReactiveDependency<Node[]> | (Node | ReactiveDependency<Node>)[] {
   const normalizedChildrenResult = normalizeChildren(children as ChildrenType<Node>);
   const transformedChildren = normalizedChildrenResult.children;
@@ -394,187 +356,6 @@ createElementInternal.fragment = function <T extends Node = Node>(
   return result;
 };
 
-type StateParam<T extends object> = { [key in keyof T]: ReactiveDependency<T[key]> } & {
-  render: () => void,
-  use: ReactiveDependencyUse<T>,
-  useWithMemo<K extends keyof T>(key: K): [ReactiveDependency<T[K]>, <MT>(factory: () => MT, deps: any[], pure?: boolean) => MT ],
-};
-
-class ReactiveDependency<T> {
-  get value(): T {
-    return this._accessor.get();
-  }
-
-  set value(val: T) {
-    this._accessor.set(val);
-  }
-
-  constructor(private _accessor: { get: () => T, set: (val: T) => void }, public addDependency: (dep: (() => void)) => void) { }
-
-  derive<U>(fn: (value: T) => U): ReactiveDependency<U> {
-    const derivedAccessor = {
-      get: () => fn(this.value),
-      set: (val: U) => {
-        throw new TypeError("Cannot set value of derived dependency");
-      }
-    };
-
-    return new ReactiveDependency<U>(derivedAccessor, this.addDependency);
-  }
-}
-
-type MemoizeFunction = <MT>(factory: () => MT, deps: any[], pure?: boolean) => MT;
-
-interface ReactiveDependencyUse<T extends object> {
-  <K extends keyof T>(key: K): ReactiveDependency<T[K]>,
-  <K extends keyof T, R>(key: K, deriveFn: (v: T[K], memo?: MemoizeFunction) => R): ReactiveDependency<R>,
-  <K extends (keyof T)[], R>(
-    key: K,
-    deriveFn: (v: { [key in K[number]]: T[key] }, memo: MemoizeFunction) => R
-  ): ReactiveDependency<R>,
-}
-
-createElementInternal.reactive = function <T extends object, R extends ChildrenType>(
-  initialState: T,
-  renderer: (stateParam: StateParam<T>) => R,
-): R {
-  const stateMap = Object.create(null) as { [key in keyof T]: { dep: ReactiveDependency<T[key]>, listeners: (() => void)[] } };
-
-  const pureState = {
-    ...initialState,
-    render: <K extends keyof T>(targetProperty?: K) => {
-      if (targetProperty) {
-        stateMap[targetProperty]?.listeners.forEach(listener => listener.call(null));
-      } else {
-        for (const key in stateMap) {
-          stateMap[key].listeners.forEach(listener => listener.call(null));
-        }
-      }
-    },
-    use: (<K extends keyof T, R = any>(
-      key: K | K[],
-      deriveFn?: (v: any, memo: <MT> (factory: () => MT, deps: any[], pure?: boolean) => MT) => R
-    ): ReactiveDependency<T[K]> | ReactiveDependency<R> => {
-      let memoIndex = -1;
-      let usedMemoCount = -1;
-      const memos: { deps: any[], memoValue: any }[] = [];
-      const pureMemos: Map<string, any> = new Map();
-      const memoize = <MT>(factory: () => MT, deps: any[], pure = false) => {
-        // If pure is true, we cache the result based on the dependencies
-        if(pure){
-          const key = JSON.stringify(deps);
-          if (pureMemos.has(key)) {
-            return pureMemos.get(key);
-          }
-          const value = factory();
-          pureMemos.set(key, value);
-          return value;
-        }
-
-        // If pure is false, we use a memoization strategy that allows for dynamic dependencies
-        // we determine the corresponding memo index based on the call count
-        if (memos[memoIndex]) {
-          if (memos[memoIndex].deps.every((d, i) => d === deps[i])) {
-            return memos[memoIndex++].memoValue;
-          }
-          memos[memoIndex].deps = deps;
-          const newValue = memos[memoIndex].memoValue = factory();
-          memoIndex++;
-          return newValue;
-        } else {
-          memos.push({ deps, memoValue: factory() });
-          return memos[memoIndex++].memoValue;
-        }
-      };
-      const memorableDeriveFn = deriveFn ? (v: any) => {
-        if(memoIndex === -1 && usedMemoCount !== -1) {
-          usedMemoCount = memoIndex;
-        }
-        memoIndex = 0;
-        const derived = deriveFn(v, memoize);
-        if(usedMemoCount !== -1 && usedMemoCount !== memoIndex) {
-          throw new TypeError("Memoization count mismatch, ensure memoization is used correctly");
-        }
-        return derived;
-      } : undefined;
-
-      if (Array.isArray(key)) {
-        const entries: [K, ReactiveDependency<T[K]>][] = key.map(k => [k, pureState.use(k)]);
-        return new ReactiveDependency({
-          get: () => Object.fromEntries(entries.map((entry) => [entry[0], entry[1].value])),
-          set: (_) => {
-            throw new TypeError("Cannot set value of multiple dependencies at once");
-          }
-        }, (dep) => {
-          let depCallPending = false;
-          // Throttle the dependency calls to avoid too many updates in a single render cycle
-          const throttleDep = () => {
-            if (depCallPending) return;
-            depCallPending = true;
-            // Use setTimeout to ensure the dependent listener is called in the next event loop cycle
-            window.setTimeout(() => {
-              depCallPending = false;
-              dep();
-            }, 0);
-          };
-          entries.forEach((entry) => entry[1].addDependency(throttleDep));
-        }).derive(memorableDeriveFn!) as ReactiveDependency<R>;
-      } else {
-        let dep: ReactiveDependency<T[K]> | undefined;
-        if (stateMap[key as keyof typeof stateMap]) {
-          dep = stateMap[key as keyof typeof stateMap].dep as unknown as ReactiveDependency<T[K]>;
-        } else if (pureState[key] instanceof ReactiveDependency) {
-          dep = pureState[key] as ReactiveDependency<T[K]>;
-        } else {
-          dep = new ReactiveDependency<T[K]>(
-            {
-              get: () => pureState[key],
-              set: (val: any) => {
-                pureState[key] = val;
-              }
-            },
-            function addDependency(dep) {
-              if (!stateMap[key].listeners.includes(dep)) {
-                stateMap[key].listeners.push(dep);
-              }
-            }
-          ) as ReactiveDependency<T[K]>;
-          stateMap[key as keyof typeof stateMap] = { dep, listeners: [] } as any;
-        }
-
-        if (memorableDeriveFn) {
-          return dep.derive(memorableDeriveFn) as ReactiveDependency<T[K]>;
-        }
-
-        return dep;
-      }
-    }) as ReactiveDependencyUse<T>,
-    useWithMemo: <K extends keyof T>(key: K): [ReactiveDependency<T[K]>, MemoizeFunction] => {
-      let memo: MemoizeFunction = null!;
-      const dep = pureState.use(key, (v, _memo) => {
-        memo = _memo!;
-        return v;
-      });
-      dep.value; // Trigger the initial value to ensure the dependency is set up
-      return [dep as ReactiveDependency<T[K]>, memo];
-    }
-  };
-
-  const state: StateParam<T> = new Proxy(pureState, {
-    set(target, prop, value) {
-      if (prop === "render") {
-        throw new TypeError("Cannot set 'render' property");
-      }
-
-      target[prop as keyof typeof target] = value;
-      target.render(prop as keyof T);
-      return true;
-    }
-  }) as StateParam<T>;
-
-  return renderer(state);
-};
-
 function generateUniqueId() {
   return `${Date.now().toString(36)}${Math.random().toString(36).substring(2)}`;
 }
@@ -590,46 +371,28 @@ function spreadHTMLCollection(collection: HTMLCollection): Element[] {
   return result;
 }
 
-createElementInternal.useUniqueString = function <T extends ChildrenType>(renderer: (id: string) => T): T {
+fluxelInternal.useUniqueString = function <T extends ChildrenType>(renderer: (id: string) => T): T {
   const id = generateUniqueId();
   return renderer(id);
 }
 
-createElementInternal.component = function <P extends object, S extends object, R extends ChildrenType>(
-  renderer: (props: P, state: StateParam<S>) => R,
-  initialState?: S | ((props: P) => S),
-) {
-  return (props: P = {} as P): R => {
-    return createElementInternal.reactive(
-      typeof initialState === "function" ? initialState(props) : (initialState || {} as S),
-      state => {
-        return renderer(props, state);
-      }
-    );
-  }
-}
-
-createElementInternal.text = function (text: string): Text {
-  return window.document.createTextNode(text);
-}
-
-const createElement = createElementInternal as typeof createElementInternal & {
+const Fluxel = fluxelInternal as typeof fluxelInternal & {
   default: unknown,
   ReactiveDependency: typeof ReactiveDependency,
 } & { [key in keyof HTMLElementTagNameMap]: NarrowReturnType<
   (
-    options?: string | HTMLElement | HTMLElement[] | CreateElementInternalOptions<key>
+    options?: string | HTMLElement | HTMLElement[] | FluxelInternalOptions<key>
   ) => HTMLElementTagNameMap[key],
   HTMLElementTagNameMap[key]
 > };
 
 tags.forEach(tag => {
-  createElement[tag] = (options?: any) => {
-    return createElementInternal(tag, options) as any;
+  Fluxel[tag] = (options?: any) => {
+    return fluxelInternal(tag, options) as any;
   };
 });
 
-createElement.default = createElement;
-createElement.ReactiveDependency = ReactiveDependency;
+Fluxel.default = Fluxel;
+Fluxel.ReactiveDependency = ReactiveDependency;
 
-export default createElement;
+export default Fluxel;
