@@ -1,4 +1,4 @@
-# `@mtripg6666tdr/create-element`
+# Fluxel
 
 A tiny, type-safe utility for building reactive DOM UIs, drawing inspiration from React's `createElement` and native browser APIs. This package simplifies the creation of HTML elements with a fluent API, robust attribute handling, and a flexible reactive system designed for high performance in focused scenarios.
 
@@ -10,19 +10,19 @@ This utlity is also the remarkably lightweight, which weighs in at approximately
 * **Intuitive API:** Create elements using direct function calls for each HTML tag (e.g., `div()`, `span()`).
 * **Flexible Children & Properties:** Supports various types for children (strings, Nodes, reactive values) and handles attributes, event listeners, inline styles, `classList`, and `dataset` properties seamlessly.
 * **Reactive System:** Introduce state-driven reactivity for properties, styles, and children, enabling automatic UI updates when state changes.
-* **`createElement.fragment`:** A powerful utility that groups child elements without creating an extra DOM wrapper, and intelligently **propagates attributes (especially classes and event handlers) to its children**.
+* **`fluxel.fragment`:** A powerful utility that groups child elements without creating an extra DOM wrapper, and intelligently **propagates attributes (especially classes and event handlers) to its children**.
     * **Attribute Overwriting:** Most attributes on `fragment` will overwrite existing attributes on children.
     * **Class Addition:** `classList` values on `fragment` will be **added** to children's existing classes.
     * **Event Handler Addition:** Event handlers on `fragment` will be **added** to children's existing event listeners.
-* **`createElement.useUniqueString`**: Generates a unique string for `id`/`htmlFor` pairings, simplifying accessibility for form elements.
-* **`createElement.component`**: A lightweight abstraction to define reusable, stateful UI components, enhancing modularity while leveraging the reactive core.
+* **`fluxel.useUniqueString`**: Generates a unique string for `id`/`htmlFor` pairings, simplifying accessibility for form elements.
+* **`fluxel.component`**: A lightweight abstraction to define reusable, stateful UI components, enhancing modularity while leveraging the reactive core.
 
 ## Installation
 
 ```bash
-npm install @mtripg6666tdr/create-element
+npm install fluxel
 # or
-yarn add @mtripg6666tdr/create-element
+yarn add fluxel
 ```
 
 ## Usage
@@ -30,18 +30,18 @@ yarn add @mtripg6666tdr/create-element
 ### Basic Element Creation
 
 ```typescript
-import createElement from '@mtripg6666tdr/create-element';
+import fluxel from 'fluxel';
 
-const myDiv = createElement.div('Hello, World!');
+const myDiv = fluxel.div('Hello, World!');
 document.body.appendChild(myDiv); // <div>Hello, World!</div>
 ```
 
 ### Setting Attributes and Event Handlers
 
 ```typescript
-import createElement from '@mtripg6666tdr/create-element';
+import fluxel from 'fluxel';
 
-const button = createElement.button({
+const button = fluxel.button({
   children: 'Click Me!',
   onclick: () => console.log('Button clicked!'),
   style: { backgroundColor: 'dodgerblue', color: 'white', padding: '10px' },
@@ -51,25 +51,25 @@ const button = createElement.button({
 document.body.appendChild(button);
 ```
 
-### Reactive State with `createElement.reactive`
+### Reactive State with `fluxel.reactive`
 
 This utility allows you to create dynamic UI components that update automatically when their state changes.
 
 ```typescript
-import createElement from '@mtripg6666tdr/create-element';
+import fluxel from 'fluxel';
 
-const reactiveComponent = createElement.reactive({ counter: 0, label: "Count" }, state => ([
-  createElement.div({
+const reactiveComponent = fluxel.reactive({ counter: 0, label: "Count" }, state => ([
+  fluxel.div({
     style: {
       backgroundColor: state.use("counter").derive(c => c % 2 === 0 ? "lightgreen" : "lightcoral"),
     },
     children: [
-      createElement.h3("Reactive Counter"),
-      createElement.p([
-        createElement.span(state.use("label").derive(l => l + ": ")),
-        createElement.span(state.use("counter")), // Direct reactive value
+      fluxel.h3("Reactive Counter"),
+      fluxel.p([
+        fluxel.span(state.use("label").derive(l => l + ": ")),
+        fluxel.span(state.use("counter")), // Direct reactive value
       ]),
-      createElement.button({
+      fluxel.button({
         children: "Increment",
         onclick: () => { state.counter++; } // Modify state to trigger updates
       })
@@ -84,23 +84,23 @@ document.body.appendChild(reactiveComponent);
 * **`ReactiveDependency.derive(fn)`**: Creates a new `ReactiveDependency` whose value is derived from the original one. The `deriveFn` is re-evaluated only when its declared dependencies change, ensuring efficient recalculations.
 * **Updating state**: Directly assigning a new value to a state property (e.g., `state.counter++`) triggers updates. For nested object changes, `state.render()` might be needed if the top-level property reference doesn't change.
 
-### `createElement.useUniqueString`
+### `fluxel.useUniqueString`
 
 Generates a unique ID for use with `id` and `htmlFor` attributes, simplifying accessible form elements.
 
 ```typescript
-import createElement from '@mtripg6666tdr/create-element';
+import fluxel from 'fluxel';
 
-const formElement = createElement.useUniqueString(id => [
-  createElement.label({ htmlFor: id, children: "Your Name:" }),
-  createElement.input({ type: "text", id: id, placeholder: "Enter name" })
+const formElement = fluxel.useUniqueString(id => [
+  fluxel.label({ htmlFor: id, children: "Your Name:" }),
+  fluxel.input({ type: "text", id: id, placeholder: "Enter name" })
 ]);
 document.body.appendChild(formElement);
 ```
 
-### `createElement.fragment`
+### `fluxel.fragment`
 
-`createElement.fragment` allows you to group multiple child nodes without introducing an additional wrapper DOM element into the DOM tree. This is particularly useful when you need to return multiple top-level elements from a component's `renderer` function, or when you want to apply common options (like event handlers or styles) to a collection of elements without affecting their DOM structure.
+`fluxel.fragment` allows you to group multiple child nodes without introducing an additional wrapper DOM element into the DOM tree. This is particularly useful when you need to return multiple top-level elements from a component's `renderer` function, or when you want to apply common options (like event handlers or styles) to a collection of elements without affecting their DOM structure.
 
 It takes two arguments: `children` and `options`.
 
@@ -108,19 +108,19 @@ It takes two arguments: `children` and `options`.
 - `options`: An optional object for applying attributes, event handlers, or styles to the *children* within the fragment. Note that `fragment` itself does not create a DOM element, so these options are applied to the immediate `HTMLElement` children if they are not `ReactiveDependency` objects.
 
 ```js
-import createElement from '@mtripg6666tdr/create-element';
+import fluxel from 'fluxel';
 
-const ClickableItems = createElement.component(
+const ClickableItems = fluxel.component(
   (props, state) => {
     const handleClick = () => {
       state.clicks++;
     };
 
-    return createElement.fragment(
+    return fluxel.fragment(
       [
-        createElement.button('Click Me 1'),
-        createElement.button('Click Me 2'),
-        createElement.p(state.use('clicks', clicks => `Total Clicks: ${clicks}`))
+        fluxel.button('Click Me 1'),
+        fluxel.button('Click Me 2'),
+        fluxel.p(state.use('clicks', clicks => `Total Clicks: ${clicks}`))
       ],
       {
         onclick: handleClick, // This handler applies to the buttons
@@ -139,16 +139,16 @@ const ClickableItems = createElement.component(
 document.body.appendChild(ClickableItems());
 ```
 
-### `createElement.component`
+### `fluxel.component`
 
-Define reusable, stateful components. This function wraps `createElement.reactive` to provide a clearer component structure.
+Define reusable, stateful components. This function wraps `fluxel.reactive` to provide a clearer component structure.
 
 The `renderer` function receives `props` and `state` as arguments:
 - `props`: An object containing data passed from the parent component. Props are generally considered **immutable** within the component. **Directly changing a `prop` value within the component will not trigger a re-render or reactive update.** If the parent component provides a `ReactiveDependency` as a prop (e.g., via `parentState.use()`), the child component can then `derive` from this `ReactiveDependency` to react to its changes.
 - `state`: An object representing the component's internal, reactive state. Changes to `state` properties via `state.propertyName = value` will automatically trigger a re-render of the component.
 
 ```typescript
-import createElement from '@mtripg6666tdr/create-element';
+import fluxel from 'fluxel';
 
 interface CounterProps {
   title: string;
@@ -159,13 +159,13 @@ interface CounterState {
   count: number;
 }
 
-const MyCounter = createElement.component<CounterProps, CounterState, HTMLElement>(
+const MyCounter = fluxel.component<CounterProps, CounterState, HTMLElement>(
   // Component renderer function: receives props and state
   (props, state) => {
-    return createElement.div([ // Wrapped in a div
-      createElement.h3(props.title),
-      createElement.p(state.use('count').derive(c => `Count: ${c}`)), // Reactive content
-      createElement.button({
+    return fluxel.div([ // Wrapped in a div
+      fluxel.h3(props.title),
+      fluxel.p(state.use('count').derive(c => `Count: ${c}`)), // Reactive content
+      fluxel.button({
         children: "Increment",
         onclick: () => { state.count++; }
       })
@@ -185,7 +185,7 @@ document.body.append(
 
 `create-element` components have a straightforward lifecycle, primarily centered around their initial setup and subsequent reactive updates:
 
-1.  **Initialization (`createElement.component` call)**:
+1.  **Initialization (`fluxel.component` call)**:
     * The `renderer` function is executed **only once** when the component instance is first created.
     * During this initial execution, `state.use()` calls within the `renderer` build the direct dependency map, linking UI elements to state properties.
     * The `initialState` (or `initialStateFn`) is evaluated to set up the component's internal reactive state.
@@ -207,20 +207,20 @@ If a prop's value can change over time from the parent, and you need the child c
 **Important Note:** The `props` object itself is **not reactive**. Its values are set once per render cycle by the parent. To react to changes in a `prop`'s value when that `prop` is a `ReactiveDependency` from the parent, you must use `props.yourPropName.derive()` to create a new reactive dependency *within* the child component.
 
 ```ts
-import createElement from '@mtripg6666tdr/create-element';
+import fluxel from 'fluxel';
 
 // This component manages a reactive message and passes it as a prop.
-const ParentComponent = createElement.component(
+const ParentComponent = fluxel.component(
   (props, state) => {
     setTimeout(() => {
       state.message = "Message updated!";
     }, 2000);
 
-    return createElement.div([
-      createElement.h2('Parent Component'),
+    return fluxel.div([
+      fluxel.h2('Parent Component'),
       // Use state.use with a derive function for string interpolation
       // or directly pass the ReactiveDependency if it's a single child.
-      createElement.p(state.use('message', msg => `Parent's current message: ${msg}`)),
+      fluxel.p(state.use('message', msg => `Parent's current message: ${msg}`)),
       // Pass the ReactiveDependency directly as a prop to the child.
       DisplayMessage({ receivedMessage: state.use('message') }),
     ]);
@@ -229,7 +229,7 @@ const ParentComponent = createElement.component(
 );
 
 // This component reacts to a prop passed as a ReactiveDependency.
-const DisplayMessage = createElement.component(
+const DisplayMessage = fluxel.component(
   (props, state) => {
     // We use props.receivedMessage.derive() to create a new ReactiveDependency
     // that updates whenever the parent's `message` (which is a ReactiveDependency) changes.
@@ -237,11 +237,11 @@ const DisplayMessage = createElement.component(
       return msg ? `Child displays: "${msg}"` : "Child displays: (No message)";
     });
 
-    return createElement.div({
+    return fluxel.div({
       style: { border: '1px dashed #ccc', padding: '10px', margin: '10px 0' },
       children: [
-        createElement.h3('Display Message Component'),
-        createElement.p(displayValue), // Use the derived reactive value
+        fluxel.h3('Display Message Component'),
+        fluxel.p(displayValue), // Use the derived reactive value
       ],
     });
   },
@@ -253,20 +253,20 @@ document.body.appendChild(ParentComponent());
 
 #### Memoization within Components
 
-`create-element`'s reactivity model ensures highly efficient updates by directly patching the DOM only where state changes occur. However, the `renderer` function of `createElement.component` runs only once during initialization, and `state.use`'s `deriveFn` is re-executed when its dependencies change. In certain scenarios, this can still lead to unnecessary re-creations of DOM elements or re-execution of expensive computations *within* a reactive block.
+`create-element`'s reactivity model ensures highly efficient updates by directly patching the DOM only where state changes occur. However, the `renderer` function of `fluxel.component` runs only once during initialization, and `state.use`'s `deriveFn` is re-executed when its dependencies change. In certain scenarios, this can still lead to unnecessary re-creations of DOM elements or re-execution of expensive computations *within* a reactive block.
 
 This is where `memo` and `useWithMemo` come in. Their design is specifically tailored to `create-element`'s unique "single renderer execution" model and push-based update strategy, differing from typical virtual DOM frameworks:
 
 * **Optimizing within Reactive Blocks**: When you opt for a broader `state.use` scope for better code readability or component structure (e.g., when conditionally rendering entirely different elements like a 'Stop' button vs. a 'Start/Resume' button, as seen in the timer example), the entire block might re-execute even if only a small part of its output changes. `memo` allows you to prevent the re-creation of specific, unchanging elements or the re-running of expensive computations *within* that reactive block, ensuring optimal performance without sacrificing code clarity.
 * **Targeted Use**: `memo` is tightly integrated with `state.use`'s dependency digestion process. This means its memoized data is managed per `state.use` call. The intention is to apply memoization precisely where direct state dependencies trigger a re-evaluation, rather than as a general-purpose caching mechanism across arbitrary function calls.
-* **Addressing Component Separation Edge Cases (`useWithMemo`)**: While the primary recommendation is to bind reactivity directly to the changing properties of an element (e.g., `createElement.span(state.use('value'))` instead of memoizing the entire `span`), real-world component separation often requires passing `ReactiveDependency` objects as props. `useWithMemo` facilitates memoization in these "edge cases" where a child component needs to optimize renders based on a reactive prop from its parent, extending the power of `memo` beyond the direct `deriveFn` scope.
+* **Addressing Component Separation Edge Cases (`useWithMemo`)**: While the primary recommendation is to bind reactivity directly to the changing properties of an element (e.g., `fluxel.span(state.use('value'))` instead of memoizing the entire `span`), real-world component separation often requires passing `ReactiveDependency` objects as props. `useWithMemo` facilitates memoization in these "edge cases" where a child component needs to optimize renders based on a reactive prop from its parent, extending the power of `memo` beyond the direct `deriveFn` scope.
 
 By carefully applying `memo` and `useWithMemo`, you can maintain highly readable and modular component code while ensuring that only truly necessary DOM updates and computations occur.
 
 * **`memo(factory, deps, pure?)`**: Available within the `deriveFn` of `state.use`, this function caches the result of the `factory` function as long as its `deps` (dependency array) do not change. This is useful for optimizing expensive computations or DOM element creations. Setting the `pure` option to `true` enables stricter memoization by stringifying the dependency array to generate a cache key.
 
     ```javascript
-    createElement.p({
+    fluxel.p({
       children: state.use(['count', 'label'], ({ count, label }, memo) => {
         const expensiveResult = memo(() => calculateSomething(count, label), [count, label]);
         return `${label}: ${expensiveResult}`;
@@ -277,7 +277,7 @@ By carefully applying `memo` and `useWithMemo`, you can maintain highly readable
 * **`useWithMemo(key)`**: When a component receives a `ReactiveDependency` as a prop from its parent, this function allows you to obtain that `ReactiveDependency` along with a `memo` function usable within that component's scope. This enables memoization even outside the direct `state.use`'s `deriveFn` scope.
 
     ```javascript
-    const MyComponent = createElement.component({ /* ... */ }, (props, state) => {
+    const MyComponent = fluxel.component({ /* ... */ }, (props, state) => {
       const [todos, memo] = state.useWithMemo('todos'); // Get ReactiveDependency and memo function
       // ...
       const todoItems = todos.derive(todos => todos.map(todo => memo(() => createTodoItem(todo), [todo])));
@@ -289,15 +289,15 @@ Proper use of `memo` and `useWithMemo` can significantly improve the performance
 
 ### Important Considerations for Reactivity
 
-`@mtripg6666tdr/create-element` prioritizes lightweightness and direct DOM manipulation, which leads to specific behaviors regarding reactive updates of child elements:
+`fluxel` prioritizes lightweightness and direct DOM manipulation, which leads to specific behaviors regarding reactive updates of child elements:
 
 1.  **Child Element Type Stability**:
     When using a `ReactiveDependency` as one element within a `children` array to dynamically switch between different types of elements, the type of the DOM node generated in the **first render** is determined. Subsequent updates will **not** change the underlying DOM node's type.
 
-    * **Switching between HTMLElements**: Dynamically switching between different `HTMLElement` types (e.g., `createElement.hr()` vs `createElement.span()`) is achieved by creating a new element and **replacing** the old one.
-    * **TextNode ⇔ HTMLElement switching is not supported**: Dynamic switching between a `TextNode` and an `HTMLElement` is not supported. If you need to conditionally render text or an element, it is recommended to wrap the text in an `HTMLElement` like `createElement.span('text content')`.
+    * **Switching between HTMLElements**: Dynamically switching between different `HTMLElement` types (e.g., `fluxel.hr()` vs `fluxel.span()`) is achieved by creating a new element and **replacing** the old one.
+    * **TextNode ⇔ HTMLElement switching is not supported**: Dynamic switching between a `TextNode` and an `HTMLElement` is not supported. If you need to conditionally render text or an element, it is recommended to wrap the text in an `HTMLElement` like `fluxel.span('text content')`.
 
-    * **Conditional component rendering**: If you want to conditionally show or hide a component within a `children` array, it is recommended to either wrap the entire dynamic `children` array with an outer `ReactiveDependency`, or use an empty element like `createElement.span()` when the component should not be displayed.
+    * **Conditional component rendering**: If you want to conditionally show or hide a component within a `children` array, it is recommended to either wrap the entire dynamic `children` array with an outer `ReactiveDependency`, or use an empty element like `fluxel.span()` when the component should not be displayed.
 
 2.  **Efficient List Updates (Advanced Reconciliation)**:
 
@@ -327,7 +327,7 @@ Proper use of `memo` and `useWithMemo` can significantly improve the performance
 Key exported types are described below.
 
 * **`ReactiveDependency<T>`**: A class representing a reactive value, enabling dependency tracking and derivation.
-* **`StateParam<T>`**: The type for the state object passed to `createElement.reactive`'s renderer and `createElement.component`'s renderer, including `use` and `render` methods.
+* **`StateParam<T>`**: The type for the state object passed to `fluxel.reactive`'s renderer and `fluxel.component`'s renderer, including `use` and `render` methods.
 
 ## Contributing
 

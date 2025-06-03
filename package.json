@@ -1,7 +1,7 @@
 {
-  "name": "@mtripg6666tdr/create-element",
-  "version": "0.1.1",
-  "description": "A simple utility to create HTML elements with attributes and children.",
+  "name": "fluxel",
+  "version": "0.2.0",
+  "description": "Build fast web UIs with Fluxel: the minimal, reactive library designed for ultimate performance.",
   "files": [
     "dist",
     "README.md"
@@ -32,8 +32,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mtripg6666tdr/create-element.git"
+    "url": "git+https://github.com/mtripg6666tdr/fluxel.git"
   },
+  "readme": "https://github.com/mtripg6666tdr/fluxel/#readme",
+  "bugs": {
+    "url": "https://github.com/mtripg6666tdr/fluxel/issues"
+  },
+  "homepage": "https://github.com/mtripg6666tdr/fluxel",
   "devDependencies": {
     "@swc/cli": "^0.6.0",
     "esbuild": "^0.25.5",
