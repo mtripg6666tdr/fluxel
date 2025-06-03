@@ -241,7 +241,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
   if (variableChildrenLength && originalChildren) {
     (originalChildren as unknown as ReactiveDependency<ChildrenTypeNoReactiveNodes[]>).addDependency(() => {
       const currentChildren = spreadHTMLCollection(element.children);
-      const { children: newChildren } = normalizeChildren(originalChildren);
+      const newChildren = normalizeChildren(originalChildren).children;
 
       if(newChildren.length < currentChildren.length) {
         // removed some children
@@ -370,11 +370,11 @@ createElementInternal.fragment = function <T extends Node = Node>(
   children: ChildrenType<T>,
   options: CreateElementInternalOptionsFromNode<T>,
 ): Node[] | ReactiveDependency<Node[]> | (Node | ReactiveDependency<Node>)[] {
-  const {
-    children: transformedChildren,
-    variableChildrenLength,
-    reactiveIndex,
-  } = normalizeChildren(children as ChildrenType<Node>);
+  const normalizedChildrenResult = normalizeChildren(children as ChildrenType<Node>);
+  const transformedChildren = normalizedChildrenResult.children;
+  const variableChildrenLength = normalizedChildrenResult.variableChildrenLength;
+  const reactiveIndex = normalizedChildrenResult.reactiveIndex;
+
   const result = transformedChildren as (Node | ReactiveDependency<Node>)[];
 
   result.forEach(child => {
@@ -501,7 +501,7 @@ createElementInternal.reactive = function <T extends object, R extends ChildrenT
       if (Array.isArray(key)) {
         const entries: [K, ReactiveDependency<T[K]>][] = key.map(k => [k, pureState.use(k)]);
         return new ReactiveDependency({
-          get: () => Object.fromEntries(entries.map(([k, dep]) => [k, dep.value])),
+          get: () => Object.fromEntries(entries.map((entry) => [entry[0], entry[1].value])),
           set: (_) => {
             throw new TypeError("Cannot set value of multiple dependencies at once");
           }
@@ -517,7 +517,7 @@ createElementInternal.reactive = function <T extends object, R extends ChildrenT
               dep();
             }, 0);
           };
-          entries.forEach(([_, v]) => v.addDependency(throttleDep));
+          entries.forEach((entry) => entry[1].addDependency(throttleDep));
         }).derive(memorableDeriveFn!) as ReactiveDependency<R>;
       } else {
         let dep: ReactiveDependency<T[K]> | undefined;
@@ -631,4 +631,5 @@ tags.forEach(tag => {
 
 createElement.default = createElement;
 createElement.ReactiveDependency = ReactiveDependency;
-export = createElement as typeof createElement & { default: typeof createElement };
+
+export default createElement;

@@ -2,12 +2,29 @@
   "name": "@mtripg6666tdr/create-element",
   "version": "0.1.1",
   "description": "A simple utility to create HTML elements with attributes and children.",
-  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "main": "dist/cjs/index.js",
+  "type": "module",
+  "exports": {
+    "./package.json": "./package.json",
+    "./*": {
+      "types": "./dist/types/*.d.ts",
+      "import": "./dist/esm/*.js",
+      "require": "./dist/cjs/*.js"
+    }
+  },
+  "types": "dist/types/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "swc --strip-leading-paths -d dist src && tsc",
-    "prebuild": "node ./bakeElement.js",
-    "clean": "rimraf dist",
+    "build": "swc --strip-leading-paths -d dist/esm src && node ./build.mjs && tsc",
+    "prebuild": "node ./bakeElement.cjs",
+    "cleanup": "rimraf dist builder-out",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
@@ -19,15 +36,9 @@
   },
   "devDependencies": {
     "@swc/cli": "^0.6.0",
+    "esbuild": "^0.25.5",
     "rimraf": "^6.0.1",
     "swc": "^1.0.11",
     "typescript": "^5.7.3"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "dist",
-    "README.md"
-  ]
+  }
 }

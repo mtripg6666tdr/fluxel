@@ -14,8 +14,8 @@
     "keepClassNames": true,
     "minify": {}
   },
-  "minify": true,
+  "minify": false,
   "module": {
-    "type": "commonjs"
+    "type": "es6"
   }
 }
