@@ -4,9 +4,11 @@
   "description": "Build fast web UIs with Fluxel: the minimal, reactive library designed for ultimate performance.",
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "main": "dist/cjs/index.js",
+  "browser": "dist/browser/index.js",
   "type": "module",
   "exports": {
     "./package.json": "./package.json",
@@ -22,7 +24,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "swc --strip-leading-paths -d dist/esm src && node ./build.mjs && tsc",
+    "build": "swc --strip-leading-paths -d dist/esm --config-file esm.swcrc src && swc --strip-leading-paths -d dist/cjs --config-file cjs.swcrc src && node ./build.mjs && tsc",
     "prebuild": "node ./bakeElement.cjs",
     "cleanup": "rimraf dist builder-out",
     "typecheck": "tsc --noEmit"
