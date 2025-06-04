@@ -10,6 +10,41 @@ Fluxel is an ultra-lightweight and high-performance DOM-building library inspire
 * 🏗️ **`Fluxel.createComponent` / `Fluxel.createStatefulComponent`**: Lightweight abstractions for defining reusable UI components. You can clearly define both stateless and reactive components.
 * 🍃 **Lightweight Modular Design**: With zero dependencies and a modular structure, you can selectively include reactive features or JSX support based on your development needs. This enables minimal bundling, faster load times, and maximum performance.
 
+## Table of Contents
+- [Fluxel - Tiny, Fast, and Delightful DOM Building Library](#fluxel---tiny-fast-and-delightful-dom-building-library)
+  - [Features](#features)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+    - [Importing](#importing)
+    - [JSX Setup](#jsx-setup)
+    - [Installation via CDN](#installation-via-cdn)
+  - [Usage](#usage)
+    - [Basic Functional API Example](#basic-functional-api-example)
+    - [Basic JSX Example](#basic-jsx-example)
+    - [Using `classList`](#using-classlist)
+    - [Using `fragment` (`Fluxel.fragment`)](#using-fragment-fluxelfragment)
+      - [Functional API Example](#functional-api-example)
+      - [JSX Example](#jsx-example)
+    - [Creating an unique identifier (`Fluxel.useUniqueString`)](#creating-an-unique-identifier-fluxeluseuniquestring)
+    - [Components (`Fluxel.createComponent` / `Fluxel.createStatefulComponent`)](#components-fluxelcreatecomponent--fluxelcreatestatefulcomponent)
+      - [Basing Example](#basing-example)
+      - [Component Overview](#component-overview)
+      - [Reactive State and `ReactiveDependency` Objects](#reactive-state-and-reactivedependency-objects)
+      - [Component Lifecycle](#component-lifecycle)
+      - [Notes on Prop Changes](#notes-on-prop-changes)
+      - [Memoization within Components](#memoization-within-components)
+  - [Advanced Reactivity Information](#advanced-reactivity-information)
+    - [Efficient List Updates (Advanced DOM Diffing and Application)](#efficient-list-updates-advanced-dom-diffing-and-application)
+    - [`TextNode` Updates vs. `HTMLElement` Updates](#textnode-updates-vs-htmlelement-updates)
+      - [Child Element Type Stability](#child-element-type-stability)
+    - [Triggering Side Effects by Monitoring State Changes (`state.listenTarget`)](#triggering-side-effects-by-monitoring-state-changes-statelistentarget)
+    - [Expressing Reactive Elements Without Components (`Fluxel.reactive`)](#expressing-reactive-elements-without-components-fluxelreactive)
+    - [Memoization when using `ReactiveDependency` as `Props` (`state.useWithMemo`)](#memoization-when-using-reactivedependency-as-props-stateusewithmemo)
+  - [Type Definitions](#type-definitions)
+  - [Contributions](#contributions)
+  - [License](#license)
+
+
 ## Installation
 
 ```sh
