@@ -17,7 +17,7 @@
   "type": "module",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
-  "browser": "dist/browser/index.js",
+  "browser": "dist/browser/fluxel.min.js",
   "exports": {
     "./package.json": "./package.json",
     "./type": {
