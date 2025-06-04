@@ -1,5 +1,5 @@
-import BaseFluxel from "../baseReactive";
-import type { ChildrenType, StateParam, FluxelComponent } from "../type";
+import BaseFluxel from "../baseReactive.js";
+import type { ChildrenType, StateParam, FluxelComponent } from "../type.js";
 
 const Fluxel = BaseFluxel as typeof BaseFluxel & {
   createStatefulComponent: <P extends object, S extends object, R extends ChildrenType>(

@@ -11,39 +11,31 @@ Fluxel is an ultra-lightweight and high-performance DOM-building library inspire
 * 🍃 **Lightweight Modular Design**: With zero dependencies and a modular structure, you can selectively include reactive features or JSX support based on your development needs. This enables minimal bundling, faster load times, and maximum performance.
 
 ## Table of Contents
-- [Fluxel - Tiny, Fast, and Delightful DOM Building Library](#fluxel---tiny-fast-and-delightful-dom-building-library)
-  - [Features](#features)
-  - [Table of Contents](#table-of-contents)
-  - [Installation](#installation)
-    - [Importing](#importing)
-    - [JSX Setup](#jsx-setup)
-    - [Installation via CDN](#installation-via-cdn)
-  - [Usage](#usage)
-    - [Basic Functional API Example](#basic-functional-api-example)
-    - [Basic JSX Example](#basic-jsx-example)
-    - [Using `classList`](#using-classlist)
-    - [Using `fragment` (`Fluxel.fragment`)](#using-fragment-fluxelfragment)
-      - [Functional API Example](#functional-api-example)
-      - [JSX Example](#jsx-example)
-    - [Creating an unique identifier (`Fluxel.useUniqueString`)](#creating-an-unique-identifier-fluxeluseuniquestring)
-    - [Components (`Fluxel.createComponent` / `Fluxel.createStatefulComponent`)](#components-fluxelcreatecomponent--fluxelcreatestatefulcomponent)
-      - [Basing Example](#basing-example)
-      - [Component Overview](#component-overview)
-      - [Reactive State and `ReactiveDependency` Objects](#reactive-state-and-reactivedependency-objects)
-      - [Component Lifecycle](#component-lifecycle)
-      - [Notes on Prop Changes](#notes-on-prop-changes)
-      - [Memoization within Components](#memoization-within-components)
-  - [Advanced Reactivity Information](#advanced-reactivity-information)
-    - [Efficient List Updates (Advanced DOM Diffing and Application)](#efficient-list-updates-advanced-dom-diffing-and-application)
-    - [`TextNode` Updates vs. `HTMLElement` Updates](#textnode-updates-vs-htmlelement-updates)
-      - [Child Element Type Stability](#child-element-type-stability)
-    - [Triggering Side Effects by Monitoring State Changes (`state.listenTarget`)](#triggering-side-effects-by-monitoring-state-changes-statelistentarget)
-    - [Expressing Reactive Elements Without Components (`Fluxel.reactive`)](#expressing-reactive-elements-without-components-fluxelreactive)
-    - [Memoization when using `ReactiveDependency` as `Props` (`state.useWithMemo`)](#memoization-when-using-reactivedependency-as-props-stateusewithmemo)
-  - [Type Definitions](#type-definitions)
-  - [Contributions](#contributions)
-  - [License](#license)
-
+- [Features](#features)
+- [Table of Contents](#table-of-contents)
+- [Installation](#installation)
+  - [Importing](#importing)
+  - [JSX Setup](#jsx-setup)
+  - [Installation via CDN](#installation-via-cdn)
+- [Usage](#usage)
+  - [Basic Functional API Example](#basic-functional-api-example)
+  - [Basic JSX Example](#basic-jsx-example)
+  - [Using `classList`](#using-classlist)
+  - [Using `fragment` (`Fluxel.fragment`)](#using-fragment-fluxelfragment)
+  - [Components (`Fluxel.createComponent` / `Fluxel.createStatefulComponent`)](#components-fluxelcreatecomponent--fluxelcreatestatefulcomponent)
+  - [Creating an unique identifier (`Fluxel.useUniqueString`)](#creating-an-unique-identifier-fluxeluseuniquestring)
+  - [Component-Bound Static Style Injection (`Fluxel.forwardStyle`)](#component-bound-static-style-injection-fluxelforwardstyle)
+  - [**Server-Side Rendering (SSR) and Hydration**](#server-side-rendering-ssr-and-hydration)
+- [Advanced Reactivity Information](#advanced-reactivity-information)
+  - [Efficient List Updates (Advanced DOM Diffing and Application)](#efficient-list-updates-advanced-dom-diffing-and-application)
+  - [`TextNode` Updates vs. `HTMLElement` Updates](#textnode-updates-vs-htmlelement-updates)
+  - [Child Element Type Stability](#child-element-type-stability)
+  - [Triggering Side Effects by Monitoring State Changes (`state.listenTarget`)](#triggering-side-effects-by-monitoring-state-changes-statelistentarget)
+  - [Expressing Reactive Elements Without Components (`Fluxel.reactive`)](#expressing-reactive-elements-without-components-fluxelreactive)
+  - [Memoization when using `ReactiveDependency` as `Props` (`state.useWithMemo`)](#memoization-when-using-reactivedependency-as-props-stateusewithmemo)
+- [Type Definitions](#type-definitions)
+- [Contributions](#contributions)
+- [License](#license)
 
 ## Installation
 
@@ -269,25 +261,6 @@ const ClickableItemsJSX = Fluxel.createStatefulComponent(
 document.getElementById('app')!.appendChild(Fluxel.ensureNode(<ClickableItemsJSX />));
 ```
 
-### Creating an unique identifier (`Fluxel.useUniqueString`)
-
-`Fluxel.useUniqueString` helps generate unique strings that can be used for HTML element attributes like `id` and `htmlFor`, simplifying accessibility for form elements and more. This function accepts a callback function as an argument, and the generated unique ID is passed as a string to this callback.
-
-```tsx
-import Fluxel from "fluxel/jsx";
-
-const MyForm = Fluxel.createComponent(() => {
-  return Fluxel.useUniqueString((inputId) => (
-    <form>
-      <label htmlFor={inputId}>Name:</label>
-      <input type="text" id={inputId} name="name" />
-    </form>
-  ));
-});
-
-document.body.appendChild(Fluxel.ensureNode(<MyForm />));
-```
-
 ### Components (`Fluxel.createComponent` / `Fluxel.createStatefulComponent`)
 
 Fluxel allows you to define reusable UI parts as components. This improves code modularity, readability, and maintainability.
@@ -476,6 +449,269 @@ This is where the `memo` function comes in. Its design is specialized for Fluxel
   );
   ```
 
+### Creating an unique identifier (`Fluxel.useUniqueString`)
+
+`Fluxel.useUniqueString` helps generate unique strings that can be used for HTML element attributes like `id` and `htmlFor`, simplifying accessibility for form elements and more. This function accepts a callback function as an argument, and the generated unique ID is passed as a string to this callback.
+
+```tsx
+import Fluxel from "fluxel/jsx";
+
+const MyForm = Fluxel.createComponent(() => {
+  return Fluxel.useUniqueString((inputId) => (
+    <form>
+      <label htmlFor={inputId}>Name:</label>
+      <input type="text" id={inputId} name="name" />
+    </form>
+  ));
+});
+
+document.body.appendChild(Fluxel.ensureNode(<MyForm />));
+```
+
+### Component-Bound Static Style Injection (`Fluxel.forwardStyle`)
+
+Fluxel.forwardStyle is a powerful utility function that allows you to dynamically insert CSS strings into the document's &lt;head&gt; at any time. This provides a flexible way to manage styles, especially for component-specific or theme-related styling.
+
+This function accepts a single CSS string as its argument and returns nothing (void). The CSS rules provided in the string are immediately inserted into the document's &lt;head&gt; upon function call, and the styles are applied instantly.
+
+```tsx
+import Fluxel from 'fluxel';
+
+const MyButtonComponent = Fluxel.createComponent(() => {
+  // Styles are injected when this component is first rendered.
+  Fluxel.forwardStyle(`
+    .my-button {
+      background-color: #007bff;
+    }
+    .my-button:hover {
+      background-color: #0056b3;
+    }
+  `);
+
+  return Fluxel.button({
+    classList: ['my-button'],
+    children: 'Click Me'
+  });
+});
+```
+
+**Key Features & Benefits:**
+
+* **Dynamic Style Insertion**: Insert CSS rules into the &lt;head&gt; at any point during the application's lifecycle, enabling dynamic styling based on user interactions or application state.  
+* **Automatic Deduplication**: The function performs deduplication by comparing the exact CSS string. If the same CSS string is passed multiple times, it will only be inserted into the &lt;head&gt; once, preventing redundant style tags.  
+* **Immediate Application**: Styles are applied instantly when the forwardStyle function is called.  
+* **Component-Specific Styling (Initial Load)**: It is particularly suitable for injecting common styles that a component needs when it is first initialized. This helps manage styles that are logically tied to a component.
+
+**Important Considerations:**
+
+* **No Deletion Functionality**: Once a style string is inserted via forwardStyle, there is no built-in function to remove it from the &lt;head&gt;.  
+* **No Scoping**: Styles inserted by forwardStyle are applied globally to the entire document. There is no automatic mechanism for scoping styles to specific component instances or elements. Developers should manage potential style conflicts manually.  
+* **Not for Unique Dynamic Styles**: This function is generally not recommended for scenarios requiring the generation of unique class names for every component instance or highly dynamic, instance-specific styling that needs to be scoped or removed. This is because once CSS is added, it cannot be deleted, leading to an accumulation of style definitions. Its primary use case is for applying a fixed set of styles that are common to a component or a specific part of the application upon its initial rendering.
+
+### **Server-Side Rendering (SSR) and Hydration**
+
+Fluxel supports Server-Side Rendering (SSR) and hydration.
+
+To use Server-Side Rendering, ensure the peer dependency, `jsdom@^29.1.0` is installed, which will be used to emulate DOM building.
+
+```sh
+npm i jsdom -D
+```
+
+This process primarily uses the following two functions:
+
+* **renderToString**: Renders Fluxel components into an HTML string on the server side.  
+* **hydrate**: Activates the HTML generated by renderToString as a Fluxel application on the client side.
+
+#### **renderToString Function**
+
+This function is used to render Fluxel components into an HTML string on the server side.
+
+```tsx
+// Import
+import renderToString from "fluxel/ssr";
+
+// Signature
+function renderToString(
+  renderer: () => Node | FluxelJSXElement,
+  reactive?: boolean,
+  metadata?: string,
+): { dom: string; style: string; };
+```
+1. **renderer**:
+   * Type: `() => Node | FluxelJSXElement`
+   * Description: A function that returns the root element of the Fluxel component you want to render.  
+2. **reactive (Optional)**:
+   * Type: `boolean`
+   * Description: Whether the Fluxel component you want to render has reactivity or not. Hydration is not available unless `reactive` set to `true`.
+3. **metadata (Optional)**:
+   * Type: `string`
+   * Description: This string is added as a data-fluxel-metadata attribute to the root element of the rendered HTML (e.g., div or section). It can be used to pass specific information or state during client-side hydration.
+
+**Return Value:**
+
+renderToString returns an object with the following properties:
+
+* **dom**:  
+  * Type: `string`  
+  * Description: The HTML string of the rendered component. The content of this dom can be placed under the application's root element (e.g., &lt;div id="app"&gt;&lt;/div&gt;) to generate a complete HTML page.  
+* **style**:  
+  * Type: `string`  
+  * Description: A concatenated string of all CSS strings inserted by the Fluxel.forwardStyle function during SSR execution. This can be directly embedded in the HTML's &lt;head&gt; section to ensure style application on the client side.
+
+#### **hydrate Function**
+
+This function is used to "hydrate" (activate) an HTML element rendered on the server side as a reactive Fluxel component on the client side. This transforms static HTML into an interactive UI.
+
+```ts
+// Import
+import hydrate from "fluxel/ssr/client";
+
+// Signature
+function hydrate(
+  renderer: () => Node | FluxelJSXElement,
+  rootElement: HTMLElement,
+): void;
+```
+1. **renderer**:  
+   * Type: `() => Node | FluxelJSXElement`  
+   * Description: A function that returns the same Fluxel component root element used when generating HTML on the server side.  
+2. **rootElement**:  
+   * Type: `HTMLElement`  
+   * Description: The root element of the HTML rendered on the server side (e.g., document.getElementById('app')). This element and its descendants will be the target of hydration.
+
+**Return Value:**
+
+The hydrate function returns void (nothing). Hydration is performed on the existing DOM tree and directly updates the UI.
+
+#### **Important Considerations for SSR and Hydration**
+
+* **Strict DOM Match Required**: For Fluxel's hydration to function correctly, the HTML rendered on the server must *strictly match* the DOM structure that Fluxel would initially render on the client side. If there's a mismatch, Fluxel's index-based hydration cannot proceed correctly, and the only recourse is to completely rebuild the DOM on the client.  
+* **Developer Responsibility for Consistency**: It is crucial for developers to ensure that the rendering logic produces identical DOM structures on both the server and the client for the initial render.  
+* **Handling Client-Specific Data (e.g., `localStorage`)**: If your application needs to display content that depends on client-specific data (e.g., data from `localStorage`, user preferences not available on the server), this can cause a mismatch. In such cases, it's recommended to:  
+  1. Render the initial state on the server (or client) without this client-specific data.  
+  2. After the initial render/hydration, use `Fluxel.schedule` to update the state with the client-specific data.  
+  * **`Fluxel.schedule`**: This utility function essentially wraps the state update in a `setTimeout(..., 0)`, delaying the update until the next tick of the event loop, after initial hydration is complete. This ensures the initial DOM matches the server-rendered output.
+
+#### **SSR and Hydration Example**
+
+This example demonstrates a conceptual SSR flow, where the server-rendered HTML is then hydrated on the client. It shows how the code would typically be separated into different files for a real-world SSR application.
+
+```tsx
+// src/components/MyComponent.tsx  
+import Fluxel from "fluxel/jsx-reactive";
+
+export const MyComponent = Fluxel.createStatefulComponent((_, state) => {  
+    // Use Fluxel.schedule to update state after hydration  
+    // This ensures the initial server-rendered DOM matches,  
+    // and the update happens client-side without a mismatch.  
+    Fluxel.schedule(() => {  
+        const clientData = localStorage.getItem("userPreference") || "Default Preference";  
+        state.message = `Client data loaded: ${clientData}`;  
+    });
+
+    return (  
+        <div>  
+            <p>{state.use("message")}</p>  
+        </div>  
+    );  
+}, { message: "Loading client-specific data..." }); // Initial state for SSR, will be immediately overwritten by client data
+
+// server.ts (Conceptual Server-Side Rendering)  
+// This is a simplified example. In a real server, you'd use a web framework (e.g., Express).  
+import { MyComponent } from "./src/components/MyComponent"; // Import the component  
+import renderToString from "fluxel/ssr";
+
+function renderApp(): string {  
+    // Render the component to a string  
+    const { dom, style } = renderToString(MyComponent);
+
+    // Construct the full HTML page  
+    const html = `  
+<!DOCTYPE html>  
+<html>  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>Fluxel SSR Hydration Example</title>  
+    <!-- Server-rendered styles -->  
+    <style id="server-styles">${style}</style>  
+</head>  
+<body>  
+    <div id="app">  
+        <!-- Server-rendered DOM content -->  
+        ${dom}  
+    </div>  
+    <!-- Client-side JavaScript will hydrate this content -->  
+    <script type="module" src="/client.js"></script>  
+</body>  
+</html>  
+`;  
+    return html;  
+}
+
+// In a real server, you would send this HTML as a response to a client request.  
+// console.log(renderApp());
+
+// client.ts (This file would be bundled and served to the browser)  
+import hydrate from "fluxel/ssr/client";  
+import { MyComponent } from "./components/MyComponent"; // Import the component (after bundling)
+
+document.addEventListener("DOMContentLoaded", () => {  
+    const appRoot = document.getElementById("app");  
+    if (appRoot) {  
+        // Hydrate the server-rendered content with the Fluxel component.  
+        // The hydrate function will automatically find the [data-fluxel-ssr] element  
+        // within the provided rootElement.  
+        hydrate(MyComponent, appRoot as HTMLElement);  
+    }  
+});
+```
+
+#### Technical Overview
+
+Fluxel's SSR and hydration perform "Index-Based Hydration" for lightweight and high-performance UI.
+
+1. **Server-Side Rendering (`renderToString` Operation)**
+
+  renderToString performs the following processes when generating HTML on the server:
+
+  * **Virtual DOM Generation**: A virtual DOM tree is generated in an environment like jsdom.  
+  * **Index Assignment**: For each `document.createElement` call, a `data-fluxel-eid` attribute (sequential numbering starting from 0) is assigned to the element. This is used to efficiently identify elements during hydration.  
+  * **Metadata Assignment to Root Element**: The topmost element generated by Fluxel is assigned the following attributes:  
+    * `data-fluxel-ssr="true"`: Indicates that this element was rendered server-side.  
+    * `data-fluxel-e-count="{total_element_count}"`: Records the total number of elements generated.  
+    * `data-fluxel-metadata="{metadata_string}"`: Records the string specified in the metadata argument of `renderToString` (empty string if not specified).  
+  * **`reactive` Option**: When the reactive argument of `renderToString` is set to true, the above attributes are assigned, enabling hydration. If false or omitted, plain HTML without these attributes will be generated, and the output will not be hydratable.
+
+  **Example of Generated HTML:**
+
+  ```html
+  <div data-fluxel-eid="9" data-fluxel-ssr="true" data-fluxel-e-count="11" data-fluxel-metadata="">  
+      <h1 data-fluxel-eid="4">Fluxel ToDo List</h1>  
+      <hr data-fluxel-eid="0">  
+      <p data-fluxel-eid="1">This is a fragment.</p>  
+      <!-- ...other elements... -->  
+      <ul data-fluxel-eid="8"></ul>  
+  </div>
+  ```
+
+2. **Client-Side Hydration (`hydrate` Operation)**
+
+  hydrate activates the existing DOM tree sent from the server.
+
+  * **createElement Hook**: It hooks into `document.createElement` calls and does not create new elements.  
+  * **Index-Based Element Retrieval**: Based on `data-fluxel-eid` (index), it directly retrieves existing DOM elements using `querySelector` within the `rootElement`.  
+  * **Event Handlers Only**: Only event handlers are attached to the retrieved elements.  
+  * **Attribute/Style Skipping**: Attribute and style settings/comparisons are not performed. This assumes that the server-side generated state is correct.  
+  * **Reactivity Establishment**: Although attribute and style settings are skipped, internal operations to make the elements reactive are performed. This allows for reusing existing DOM while building an interactive UI.  
+  * **Root Element Flexibility**: Even if rootElement does not directly have the [data-fluxel-ssr] attribute, hydrate automatically searches for the immediate child with the [data-fluxel-ssr] attribute and starts hydration.
+
+3. **Important Development Considerations**
+
+   * **Strict DOM Match Required**: The DOM structure of the HTML rendered on the server must **strictly match** the DOM structure that Fluxel would initially render on the client. If there is a mismatch, hydration will fail, and DOM reconstruction will be necessary.  
+   * **Handling Client-Specific Data**: Displaying content that depends on client-specific data (e.g., localStorage) not available on the server can cause mismatches. It is recommended to display a state independent of such data during initial rendering, and then update the state with client-specific data using Fluxel.schedule (setTimeout(..., 0)) after hydration is complete.
+
 ## Advanced Reactivity Information
 
 Since Fluxel prioritizes lightness and direct DOM manipulation, its behavior may sometimes appear counter-intuitive at first glance.
@@ -508,7 +744,7 @@ This "direct DOM reconciliation algorithm," combined with the library's overall 
 
 This library distinguishes between updating the content of a `TextNode` (which is highly efficient as only `nodeValue` is changed) and replacing an `HTMLElement` (which requires creating a new element and replacing the old one). This practical approach ensures the efficiency of general text updates without incurring the overhead of complex element reconciliation in simple cases.
 
-#### Child Element Type Stability
+### Child Element Type Stability
 
 Fluxel prioritizes lightness and direct DOM manipulation, and thus has specific behaviors regarding the update of reactive child elements.
 

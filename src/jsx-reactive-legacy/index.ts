@@ -1,6 +1,6 @@
-import BaseFluxel from "../jsx-reactive";
-import { jsx, Fragment } from "../jsx-runtime";
-import type { ChildrenType, FluxelComponent, FluxelJSXElement } from "../type";
+import BaseFluxel from "../jsx-reactive/index.js";
+import { jsx, Fragment } from "../jsx-runtime/index.js";
+import type { ChildrenType, FluxelComponent, FluxelJSXElement } from "../type.js";
 
 const Fluxel = BaseFluxel as typeof BaseFluxel & {
   jsx: {
@@ -20,9 +20,9 @@ Fluxel.jsx = {
   Fragment,
 }
 
-export { default as Fragment } from "../jsxFragment";
-export { default as ensureNode } from "../jsxEnsureNode";
-export type { FluxelComponent, FluxelJSXElement, MemoizeFunction } from "../type";
+export { default as Fragment } from "../jsxFragment.js";
+export { default as ensureNode } from "../jsxEnsureNode.js";
+export type { FluxelComponent, FluxelJSXElement, MemoizeFunction } from "../type.js";
 export default Fluxel;
 
-export type { JSX } from "../jsx-runtime";
+export type { JSX } from "../jsx-runtime/index.js";

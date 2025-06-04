@@ -1,6 +1,6 @@
-import Fluxel from "../reactive";
-import type ReactiveDependency from "../reactiveDependency";
-import type { ChildrenType, FluxelComponent, FluxelInternalOptions, FluxelJSXElement } from "../type";
+import Fluxel from "../reactive/index.js";
+import type ReactiveDependency from "../reactiveDependency.js";
+import type { ChildrenType, FluxelComponent, FluxelInternalOptions, FluxelJSXElement } from "../type.js";
 
 function jsx(
   type: string | FluxelComponent<any, ChildrenType>,
@@ -15,7 +15,7 @@ function jsx(
 }
 
 export { jsx, jsx as jsxs, jsx as jsxDEV };
-export { default as Fragment } from "../jsxFragment";
+export { default as Fragment } from "../jsxFragment.js";
 
 type DefaultIntrinsicElements = { [key in keyof HTMLElementTagNameMap]: FluxelInternalOptions<
   key,

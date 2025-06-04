@@ -1,7 +1,15 @@
 // Importing the all HTML tag names as a string array from a generated file
-import ReactiveDependency from "./reactiveDependency";
-import tags from "./tags__generated";
-import type { FluxelInternalOptions, ChildrenType, CanBeReactiveMap, CanBeReactive, FixedLengthChildrenType, FluxelInternalOptionsFromNode } from "./type";
+import ReactiveDependency from "./reactiveDependency.js";
+import tags from "./tags__generated.js";
+import type { FluxelInternalOptions, ChildrenType, CanBeReactiveMap, CanBeReactive, FixedLengthChildrenType, FluxelInternalOptionsFromNode, HydrationMetadata } from "./type.js";
+
+function getFluxelHydrationMetadata(): HydrationMetadata | null {
+  if (typeof window !== "undefined" && "fluxelH" in window) {
+    return window.fluxelH as HydrationMetadata;
+  } else {
+    return null;
+  }
+}
 
 function fluxelInternal<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
@@ -19,7 +27,10 @@ function fluxelInternal<K extends keyof HTMLElementTagNameMap>(
     throw new TypeError(`Expected string for tagName, got ${typeof tagName}`);
   }
 
-  const element = window.document.createElement(tagName);
+  const hydrationMetadata: HydrationMetadata | null = getFluxelHydrationMetadata();
+  const element = hydrationMetadata
+    ? hydrationMetadata.getElementByEid(`${hydrationMetadata.count++}`) as HTMLElementTagNameMap[K]
+    : document.createElement(tagName);
 
   return applyProps(element, options);
 }
@@ -28,6 +39,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
   element: HTMLElementTagNameMap[K],
   options?: ChildrenType | FluxelInternalOptions<K>
 ): HTMLElement {
+  const isHydrating = !!getFluxelHydrationMetadata();
   let attributes: FluxelInternalOptions<K> | null = null;
   let originalChildren: ChildrenType | null = null;
   let children: Node[] | null = null;
@@ -111,7 +123,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
   const addClass = (cls: string | false | null | undefined) => {
     if(!cls) return;
     const trimmed = cls.trim();
-    if (trimmed) return;
+    if (!trimmed) return;
     classList.add(trimmed);
   };
 
@@ -179,23 +191,27 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
       dep.addDependency(() => {
         (element as any)[key] = dep.value;
       });
-      (element as any)[key] = dep.value;
+      if(!isHydrating){
+        (element as any)[key] = dep.value;
+      }
       delete attributes[key as keyof typeof attributes];
     }
   }
 
-  Object.assign(element, attributes);
+  if(!isHydrating){
+    Object.assign(element, attributes);
 
-  if (element.style && styles) {
-    Object.assign(element.style, styles);
-  }
+    if (element.style && styles) {
+      Object.assign(element.style, styles);
+    }
 
-  if (element.dataset && datasets) {
-    Object.assign(element.dataset, datasets);
-  }
+    if (element.dataset && datasets) {
+      Object.assign(element.dataset, datasets);
+    }
 
-  if (classList.size > 0) {
-    classList.forEach(cls => element.classList.add(cls));
+    if (classList.size > 0) {
+      classList.forEach(cls => element.classList.add(cls));
+    }
   }
 
   if (variableChildrenLength && originalChildren) {
@@ -264,7 +280,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
     }
   }
 
-  if (children) {
+  if (children && !isHydrating) {
     element.append(...children);
   }
 
@@ -289,7 +305,7 @@ function normalizeChildren(children: ChildrenType): { children: Node[], variable
     }
 
     if (typeof children === "string") {
-      return [window.document.createTextNode(children)];
+      return [document.createTextNode(children)];
     } else if (Array.isArray(children)) {
       children = children.flat(Infinity);
       const childrenLength = children.length;
@@ -356,6 +372,26 @@ fluxelInternal.fragment = function <T extends Node = Node, C extends ChildrenTyp
   return result as any;
 };
 
+function getFluxelStyleElement(): HTMLStyleElement {
+  const style = document.querySelector("style[data-fluxel]") as HTMLStyleElement | null;
+  if(style) return style;
+  const styleElement = document.createElement("style");
+  styleElement.dataset.fluxel = "true";
+  document.head.appendChild(styleElement);
+  return styleElement;
+}
+
+fluxelInternal.forwardStyle = function(style: string): void {
+  if(getFluxelHydrationMetadata()) return;
+  if(!fluxelInternal.forwardStyleCache.includes(style)) {
+    fluxelInternal.forwardStyleCache.push(style);
+    if (typeof window !== "undefined") {
+      getFluxelStyleElement().textContent += style;
+    }
+  }
+};
+fluxelInternal.forwardStyleCache = [] as string[];
+
 function generateUniqueId() {
   return `${Date.now().toString(36)}${Math.random().toString(36).substring(2)}`;
 }
@@ -406,4 +442,4 @@ export default Fluxel;
 
 export { ReactiveDependency };
 
-export type { FluxelComponent } from "./type";
+export type { FluxelComponent } from "./type.js";

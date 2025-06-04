@@ -1,5 +1,5 @@
-import BaseFluxel from "../baseReactive";
-import type { ChildrenType, StateParam, FluxelComponent, FluxelJSXElement } from "../type";
+import BaseFluxel from "../baseReactive.js";
+import type { ChildrenType, StateParam, FluxelComponent, FluxelJSXElement } from "../type.js";
 
 const Fluxel = BaseFluxel as unknown as Omit<typeof BaseFluxel, "createComponent"> & {
   createComponent: <P extends object>(
@@ -26,7 +26,7 @@ Fluxel.createStatefulComponent = function <P extends object, S extends object>(
   }
 }
 
-export { default as Fragment } from "../jsxFragment";
-export { default as ensureNode } from "../jsxEnsureNode";
-export type { FluxelComponent, FluxelJSXElement, MemoizeFunction } from "../type";
+export { default as Fragment } from "../jsxFragment.js";
+export { default as ensureNode } from "../jsxEnsureNode.js";
+export type { FluxelComponent, FluxelJSXElement, MemoizeFunction } from "../type.js";
 export default Fluxel;

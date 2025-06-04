@@ -1,12 +1,13 @@
-import BaseFluxel from ".";
-import ReactiveDependency from "./reactiveDependency";
-import type { ChildrenType, StateParam, ReactiveDependencyUse, MemoizeFunction, FluxelComponent } from "./type";
+import BaseFluxel from "./index.js";
+import ReactiveDependency from "./reactiveDependency.js";
+import type { ChildrenType, StateParam, ReactiveDependencyUse, MemoizeFunction, FluxelComponent } from "./type.js";
 
 const Fluxel = BaseFluxel as typeof BaseFluxel & {
   reactive: <T extends object, R extends ChildrenType>(
     initialState: T,
     renderer: (stateParam: StateParam<T>) => R,
   ) => R;
+  schedule: (fn: () => void) => void;
 };
 
 Fluxel.reactive = function <T extends object, R extends ChildrenType>(
@@ -158,5 +159,11 @@ Fluxel.reactive = function <T extends object, R extends ChildrenType>(
 
   return renderer(state);
 };
+
+Fluxel.schedule = function (fn: () => void): void {
+  if(typeof window !== "undefined"){
+    setTimeout(fn, 0);
+  }
+}
 
 export default Fluxel;

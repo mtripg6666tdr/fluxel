@@ -1,4 +1,4 @@
-import type ReactiveDependency from "./reactiveDependency";
+import type ReactiveDependency from "./reactiveDependency.js";
 
 export type NotFunctionProps<T> = {
   [key in keyof T]: Exclude<T[key], null | undefined> extends Function
@@ -65,3 +65,8 @@ export interface ReactiveDependencyUse<T extends object> {
 export type FluxelComponent<P extends object, R extends ChildrenType | FluxelJSXElement> = (props?: P) => R;
 
 export declare class FluxelJSXElement {}
+
+export type HydrationMetadata = {
+  getElementByEid(eid: string): HTMLElement,
+  count: number,
+};

@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
+    "target": "esnext",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "allowJs": false,
     "strict": true,
     "allowSyntheticDefaultImports": true,
@@ -7,7 +10,7 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "outDir": "./dist/types",
-    "skipLibCheck": true
+    "skipLibCheck": true,
   },
   "include": [
     "src"

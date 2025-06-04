@@ -1,5 +1,5 @@
-import Fluxel from ".";
-import type { ChildrenType, FluxelInternalOptionsFromNode, FluxelJSXElement } from "./type";
+import Fluxel from "./index.js";
+import type { ChildrenType, FluxelInternalOptionsFromNode, FluxelJSXElement } from "./type.js";
 
 type FragmentProps<T> = T extends Node
   ? FluxelInternalOptionsFromNode<T> & { children: T | T[] | FluxelJSXElement | FluxelJSXElement[] }

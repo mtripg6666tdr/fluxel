@@ -17,38 +17,39 @@
               }
             };
 
+            Fluxel.forwardStyle(`
+              /* Styles encapsulated within TodoInput component */
+              .todo-input-section {
+                display: flex;
+                margin-bottom: 15px;
+              }
+              .todo-input {
+                flex-grow: 1;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 1rem;
+              }
+              .todo-input:focus {
+                outline: none;
+                border-color: #4CAF50;
+              }
+              .add-button {
+                padding: 10px 15px;
+                background: #4CAF50; /* Green */
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 1rem;
+                margin-left: 10px;
+              }
+              .add-button:hover {
+                background: #45a049;
+              }
+            `);
+
             return Fluxel.fragment([
-              Fluxel.style(`
-                /* Styles encapsulated within TodoInput component */
-                .todo-input-section {
-                  display: flex;
-                  margin-bottom: 15px;
-                }
-                .todo-input {
-                  flex-grow: 1;
-                  padding: 10px;
-                  border: 1px solid #ddd;
-                  border-radius: 4px;
-                  font-size: 1rem;
-                }
-                .todo-input:focus {
-                  outline: none;
-                  border-color: #4CAF50;
-                }
-                .add-button {
-                  padding: 10px 15px;
-                  background: #4CAF50; /* Green */
-                  color: white;
-                  border: none;
-                  border-radius: 4px;
-                  cursor: pointer;
-                  font-size: 1rem;
-                  margin-left: 10px;
-                }
-                .add-button:hover {
-                  background: #45a049;
-                }
-              `),
               Fluxel.div({
                 classList: 'todo-input-section',
                 children: [
@@ -85,40 +86,41 @@
               props.onDelete(indexToDelete);
             };
 
+            Fluxel.forwardStyle(`
+              /* Styles encapsulated within TodoList component */
+              .todo-list-container {
+                list-style: none;
+                padding: 0;
+                margin-top: 10px;
+              }
+              .todo-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 0;
+                border-bottom: 1px solid #eee;
+              }
+              .todo-item:last-child {
+                border-bottom: none;
+              }
+              .todo-text {
+                flex-grow: 1;
+              }
+              .delete-button {
+                margin-left: 10px;
+                background: #dc3545; /* Bootstrap's danger color */
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 5px 10px;
+                cursor: pointer;
+              }
+              .delete-button:hover {
+                opacity: 0.8;
+              }
+            `);
+
             return Fluxel.fragment([
-              Fluxel.style(`
-                /* Styles encapsulated within TodoList component */
-                .todo-list-container {
-                  list-style: none;
-                  padding: 0;
-                  margin-top: 10px;
-                }
-                .todo-item {
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-                  padding: 8px 0;
-                  border-bottom: 1px solid #eee;
-                }
-                .todo-item:last-child {
-                  border-bottom: none;
-                }
-                .todo-text {
-                  flex-grow: 1;
-                }
-                .delete-button {
-                  margin-left: 10px;
-                  background: #dc3545; /* Bootstrap's danger color */
-                  color: white;
-                  border: none;
-                  border-radius: 4px;
-                  padding: 5px 10px;
-                  cursor: pointer;
-                }
-                .delete-button:hover {
-                  opacity: 0.8;
-                }
-              `),
               Fluxel.ul({
                 classList: 'todo-list-container',
                 children: props.todos.derive(currentTodos => {
@@ -169,23 +171,24 @@
 
             const [todos, memo] = state.useWithMemo('todos');
 
+            Fluxel.forwardStyle(`
+              /* Global/App-level styles */
+              body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                background-color: #f4f4f4;
+                color: #333;
+              }
+              .app-title {
+                text-align: center;
+                color: #2c3e50;
+                margin-bottom: 20px;
+              }
+            `)
+
             return Fluxel.div({
               style: { maxWidth: '400px', margin: '20px auto', border: '1px solid #ccc', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' },
               children: [
-                Fluxel.style(`
-                  /* Global/App-level styles */
-                  body {
-                    font-family: Arial, sans-serif;
-                    line-height: 1.6;
-                    background-color: #f4f4f4;
-                    color: #333;
-                  }
-                  .app-title {
-                    text-align: center;
-                    color: #2c3e50;
-                    margin-bottom: 20px;
-                  }
-                `),
                 Fluxel.h2({ classList: 'app-title', children: 'My Todo List' }),
                 TodoInput({ onAdd: handleAddTodo }),
                 // Spread the TodoList component's return value (which is an array from fragment)

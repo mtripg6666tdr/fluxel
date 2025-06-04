@@ -1,5 +1,9 @@
 node_modules
 typings
-dist
+dist/*
+!dist/cjs
+dist/cjs/*
+!dist/cjs/package.json
+examples/dist
 *__generated.*
 *.temp*
