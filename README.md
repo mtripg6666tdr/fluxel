@@ -25,7 +25,7 @@ Fluxel is an ultra-lightweight and high-performance DOM-building library inspire
   - [Components (`Fluxel.createComponent` / `Fluxel.createStatefulComponent`)](#components-fluxelcreatecomponent--fluxelcreatestatefulcomponent)
   - [Creating an unique identifier (`Fluxel.useUniqueString`)](#creating-an-unique-identifier-fluxeluseuniquestring)
   - [Component-Bound Static Style Injection (`Fluxel.forwardStyle`)](#component-bound-static-style-injection-fluxelforwardstyle)
-  - [**Server-Side Rendering (SSR) and Hydration**](#server-side-rendering-ssr-and-hydration)
+  - [Server-Side Rendering (SSR) and Hydration](#server-side-rendering-ssr-and-hydration)
 - [Advanced Reactivity Information](#advanced-reactivity-information)
   - [Efficient List Updates (Advanced DOM Diffing and Application)](#efficient-list-updates-advanced-dom-diffing-and-application)
   - [`TextNode` Updates vs. `HTMLElement` Updates](#textnode-updates-vs-htmlelement-updates)
@@ -508,11 +508,11 @@ const MyButtonComponent = Fluxel.createComponent(() => {
 * **No Scoping**: Styles inserted by forwardStyle are applied globally to the entire document. There is no automatic mechanism for scoping styles to specific component instances or elements. Developers should manage potential style conflicts manually.  
 * **Not for Unique Dynamic Styles**: This function is generally not recommended for scenarios requiring the generation of unique class names for every component instance or highly dynamic, instance-specific styling that needs to be scoped or removed. This is because once CSS is added, it cannot be deleted, leading to an accumulation of style definitions. Its primary use case is for applying a fixed set of styles that are common to a component or a specific part of the application upon its initial rendering.
 
-### **Server-Side Rendering (SSR) and Hydration**
+### Server-Side Rendering (SSR) and Hydration
 
 Fluxel supports Server-Side Rendering (SSR) and hydration.
 
-To use Server-Side Rendering, ensure the peer dependency, `jsdom@^29.1.0` is installed, which will be used to emulate DOM building.
+To use server-side rendering, ensure the peer dependency, `jsdom@^29.1.0` is installed, which will be used to emulate DOM building.
 
 ```sh
 npm i jsdom -D
