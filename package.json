@@ -2,35 +2,7 @@
   "name": "fluxel",
   "version": "0.2.0",
   "description": "Build fast web UIs with Fluxel: the minimal, reactive library designed for ultimate performance.",
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
-  "main": "dist/cjs/index.js",
-  "browser": "dist/browser/index.js",
-  "type": "module",
-  "exports": {
-    "./package.json": "./package.json",
-    "./*": {
-      "types": "./dist/types/*.d.ts",
-      "import": "./dist/esm/*.js",
-      "require": "./dist/cjs/*.js"
-    }
-  },
-  "types": "dist/types/index.d.ts",
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "swc --strip-leading-paths -d dist/esm --config-file esm.swcrc src && swc --strip-leading-paths -d dist/cjs --config-file cjs.swcrc src && node ./build.mjs && tsc",
-    "prebuild": "node ./bakeElement.cjs",
-    "cleanup": "rimraf dist builder-out",
-    "typecheck": "tsc --noEmit"
-  },
   "keywords": [],
-  "author": "mtripg6666tdr",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -41,6 +13,43 @@
     "url": "https://github.com/mtripg6666tdr/fluxel/issues"
   },
   "homepage": "https://github.com/mtripg6666tdr/fluxel",
+  "author": "mtripg6666tdr",
+  "type": "module",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "browser": "dist/browser/index.js",
+  "exports": {
+    "./package.json": "./package.json",
+    "./type": {
+      "types": "./dist/types/type.d.ts"
+    },
+    "./*": {
+      "types": "./dist/types/*/index.d.ts",
+      "import": "./dist/esm/*/index.js",
+      "require": "./dist/cjs/*/index.js"
+    },
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
+  "types": "dist/types/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "swc --strip-leading-paths -d dist/esm --config-file esm.swcrc src && swc --strip-leading-paths -d dist/cjs --config-file cjs.swcrc src && node ./esbuild.config.mjs && tsc",
+    "prebuild": "node ./bakeElement.cjs",
+    "cleanup": "rimraf dist examples/dist",
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
     "@swc/cli": "^0.6.0",
     "esbuild": "^0.25.5",

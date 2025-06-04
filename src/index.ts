@@ -1,19 +1,15 @@
 // Importing the all HTML tag names as a string array from a generated file
 import ReactiveDependency from "./reactiveDependency";
 import tags from "./tags__generated";
-import type { FluxelInternalOptions, ChildrenType, CanBeReactiveMap, CanBeReactive, ChildrenTypeNoReactiveNodes, FluxelInternalOptionsFromNode, StateParam, ReactiveDependencyUse, MemoizeFunction, NarrowReturnType } from "./type";
+import type { FluxelInternalOptions, ChildrenType, CanBeReactiveMap, CanBeReactive, FixedLengthChildrenType, FluxelInternalOptionsFromNode } from "./type";
 
-function fluxelInternal<K extends keyof HTMLElementTagNameMap>(
-  tagName: K,
-  children?: string | (Node | string)[],
-): HTMLElementTagNameMap[K];
 function fluxelInternal<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
   options?: FluxelInternalOptions<K>
 ): HTMLElementTagNameMap[K];
 function fluxelInternal<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
-  options?: HTMLElement,
+  options?: ChildrenType,
 ): HTMLElementTagNameMap[K];
 function fluxelInternal<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
@@ -74,7 +70,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
       const eventName = key.slice(2).toLowerCase();
       const handlers = eventHandlers.get(eventName) || [];
       eventHandlers.set(eventName, handlers);
-      const fns = attributes[key as keyof typeof attributes];
+      const fns: unknown = attributes[key as keyof typeof attributes]!;
       if (Array.isArray(fns)) {
         fns.forEach(fn => {
           if (typeof fn === "function") {
@@ -96,7 +92,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
 
 
   // extract styles
-  const styles = ("style" in attributes ? attributes.style : null) as Partial<CanBeReactiveMap<CSSStyleDeclaration>> | null;
+  const styles = Object.assign(Object.create(null), "style" in attributes ? attributes.style : null) as Partial<CanBeReactiveMap<CSSStyleDeclaration>> | null;
   if (styles && typeof styles === "object" && !Array.isArray(styles)) {
     for (const key in styles) {
       if (styles[key] instanceof ReactiveDependency) {
@@ -112,14 +108,16 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
 
   // extract class names
   const classList = new Set<string>();
-  const addClass = (cls: string) => {
+  const addClass = (cls: string | false | null | undefined) => {
+    if(!cls) return;
     const trimmed = cls.trim();
-    if (trimmed) classList.add(trimmed);
+    if (trimmed) return;
+    classList.add(trimmed);
   };
 
   element.classList.forEach(cls => addClass(cls));
   if (attributes.classList) {
-    const addClassList = (cls: CanBeReactive<string | DOMTokenList | string[] | Set<string>>) => {
+    const addClassList = (cls: CanBeReactive<string | DOMTokenList | (string | false | null | undefined)[] | Set<string | false | null | undefined>>) => {
       if (typeof cls === "string") {
         addClass(cls);
       } else if ("forEach" in cls) {
@@ -139,7 +137,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
     }
     const attributesClassList = attributes.classList;
     const transformedClassList = Array.isArray(attributesClassList) && attributesClassList.some(cls => cls instanceof ReactiveDependency)
-      ? new ReactiveDependency<string | DOMTokenList | string[] | Set<string>>({
+      ? new ReactiveDependency<string | DOMTokenList | (string | false | null | undefined)[] | Set<string | false | null | undefined>>({
           get: () => attributesClassList.map(cls => cls instanceof ReactiveDependency ? cls.value : cls),
           set: () => {
             throw new TypeError("Cannot set value of classList directly");
@@ -147,7 +145,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
         }, dep => {
           attributesClassList.forEach(cls => cls instanceof ReactiveDependency && cls.addDependency(() => dep));
         })
-      : attributes.classList as CanBeReactive<string | DOMTokenList | string[] | Set<string>>;
+      : attributes.classList as CanBeReactive<string | DOMTokenList | (string | false | null | undefined)[] | Set<string | false | null | undefined>>;
 
     addClassList(transformedClassList);
 
@@ -201,8 +199,8 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
   }
 
   if (variableChildrenLength && originalChildren) {
-    (originalChildren as unknown as ReactiveDependency<ChildrenTypeNoReactiveNodes[]>).addDependency(() => {
-      const currentChildren = spreadHTMLCollection(element.children);
+    (originalChildren as unknown as ReactiveDependency<FixedLengthChildrenType[]>).addDependency(() => {
+      const currentChildren = spreadHTMLCollection(element.childNodes);
       const newChildren = normalizeChildren(originalChildren).children;
 
       if(newChildren.length < currentChildren.length) {
@@ -235,15 +233,15 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
 
       // if we reach here, we need to replace all children (or append if there are no current children)
       newChildren.forEach((newChild, index) => {
-        while(element.children[index] && !element.children[index].isSameNode(newChild)) {
-          element.removeChild(element.children[index]);
+        while(element.childNodes[index] && !element.childNodes[index].isSameNode(newChild)) {
+          element.removeChild(element.childNodes[index]);
         }
       });
       newChildren.forEach((newChild, index) => {
-        if(index >= element.children.length) {
+        if(index >= element.childNodes.length) {
           element.appendChild(newChild);
-        } else if(!element.children[index].isSameNode(newChild)) {
-          element.insertBefore(newChild, element.children[index]);
+        } else if(!element.childNodes[index].isSameNode(newChild)) {
+          element.insertBefore(newChild, element.childNodes[index]);
         }
       });
     });
@@ -257,7 +255,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
       if (originalChild instanceof ReactiveDependency) {
         originalChild.addDependency(() => {
           const newChild = normalizeChildren(originalChild.value).children[0];
-          const oldChild = element.children[index];
+          const oldChild = element.childNodes[index];
           if (oldChild && oldChild.isSameNode(newChild)) return;
           element.replaceChild(newChild, oldChild);
         });
@@ -293,7 +291,9 @@ function normalizeChildren(children: ChildrenType): { children: Node[], variable
     if (typeof children === "string") {
       return [window.document.createTextNode(children)];
     } else if (Array.isArray(children)) {
-      const result = children.flatMap((child, index) => normalizeChildrenInternal(child, arrayDepth + 1, index));
+      children = children.flat(Infinity);
+      const childrenLength = children.length;
+      const result = children.flatMap((child, index) => normalizeChildrenInternal(child, arrayDepth + (childrenLength === 1 ? 0 : 1), index));
       return result;
     } else if (children instanceof Node) {
       return [children];
@@ -304,7 +304,7 @@ function normalizeChildren(children: ChildrenType): { children: Node[], variable
         if (arrayDepth === 0) {
           variableChildrenLength = true;
         }
-        return evaluatedChildrenValue.flatMap((child, index) => normalizeChildrenInternal(child, arrayDepth + 1, index));
+        return evaluatedChildrenValue.flat(Infinity).flatMap((child, index) => normalizeChildrenInternal(child, arrayDepth + 1, index));
       } else if (evaluatedChildrenValue instanceof Node) {
         if (arrayDepth === 0) {
           variableChildrenLength = true;
@@ -316,7 +316,7 @@ function normalizeChildren(children: ChildrenType): { children: Node[], variable
       } else {
         const textNode = window.document.createTextNode(evaluatedChildrenValue);
         children.addDependency(() => {
-          textNode.textContent = String(children.value);
+          textNode.textContent = String((children as ReactiveDependency<any>).value);
         });
         return [textNode];
       }
@@ -328,10 +328,10 @@ function normalizeChildren(children: ChildrenType): { children: Node[], variable
   return { children: normalizeChildrenInternal(children), variableChildrenLength, reactiveIndex };
 }
 
-fluxelInternal.fragment = function <T extends Node = Node>(
-  children: ChildrenType<T>,
+fluxelInternal.fragment = function <T extends Node = Node, C extends ChildrenType<T> = ChildrenType<T>>(
+  children: C,
   options: FluxelInternalOptionsFromNode<T>,
-): Node[] | ReactiveDependency<Node[]> | (Node | ReactiveDependency<Node>)[] {
+): C extends ReactiveDependency<infer _> ? ReactiveDependency<Node[]> : (Node | ReactiveDependency<Node>)[] {
   const normalizedChildrenResult = normalizeChildren(children as ChildrenType<Node>);
   const transformedChildren = normalizedChildrenResult.children;
   const variableChildrenLength = normalizedChildrenResult.variableChildrenLength;
@@ -346,25 +346,25 @@ fluxelInternal.fragment = function <T extends Node = Node>(
   });
 
   if (variableChildrenLength) {
-    return (children as ReactiveDependency<ChildrenType>).derive(() => transformedChildren);
+    return (children as ReactiveDependency<ChildrenType>).derive(() => transformedChildren) as any;
   } else if (reactiveIndex.length > 0) {
     for (const index of reactiveIndex) {
       result[index] = ((children as any)[index] as ReactiveDependency<Node>).derive(() => transformedChildren[index]);
     }
   }
 
-  return result;
+  return result as any;
 };
 
 function generateUniqueId() {
   return `${Date.now().toString(36)}${Math.random().toString(36).substring(2)}`;
 }
 
-function spreadHTMLCollection(collection: HTMLCollection): Element[] {
+function spreadHTMLCollection(collection: HTMLCollection | NodeListOf<ChildNode>): Node[] {
   if(typeof Array.from === "function") {
     return Array.from(collection);
   }
-  const result: Element[] = [];
+  const result: Node[] = [];
   for (let i = 0; i < collection.length; i++) {
     result.push(collection[i]);
   }
@@ -376,15 +376,25 @@ fluxelInternal.useUniqueString = function <T extends ChildrenType>(renderer: (id
   return renderer(id);
 }
 
+fluxelInternal.createComponent = function <P extends object, R extends ChildrenType>(
+  renderer: (props: P) => R,
+) {
+  return (props: P = {} as P): R => {
+    return renderer(props);
+  }
+}
+
+fluxelInternal.createElement = fluxelInternal;
+
+interface TagFluxel<TAG extends keyof HTMLElementTagNameMap> {
+  (options: ChildrenType): HTMLElementTagNameMap[TAG];
+  (options: FluxelInternalOptions<TAG>): HTMLElementTagNameMap[TAG];
+  (): HTMLElementTagNameMap[TAG];
+}
+
 const Fluxel = fluxelInternal as typeof fluxelInternal & {
-  default: unknown,
-  ReactiveDependency: typeof ReactiveDependency,
-} & { [key in keyof HTMLElementTagNameMap]: NarrowReturnType<
-  (
-    options?: string | HTMLElement | HTMLElement[] | FluxelInternalOptions<key>
-  ) => HTMLElementTagNameMap[key],
-  HTMLElementTagNameMap[key]
-> };
+  [TAG in keyof HTMLElementTagNameMap]: TagFluxel<TAG>;
+};
 
 tags.forEach(tag => {
   Fluxel[tag] = (options?: any) => {
@@ -392,7 +402,8 @@ tags.forEach(tag => {
   };
 });
 
-Fluxel.default = Fluxel;
-Fluxel.ReactiveDependency = ReactiveDependency;
-
 export default Fluxel;
+
+export { ReactiveDependency };
+
+export type { FluxelComponent } from "./type";

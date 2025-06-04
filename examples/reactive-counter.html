@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluxel Reactive Counter</title>
+    <script src="./dist/fluxel-reactive.min.js"></script>
+    <script>
+      window.addEventListener("load", () => {
+        const ReactiveCounter = () => (
+          Fluxel.div([
+            Fluxel.h1("Welcome to the example!"),
+            Fluxel.p("This is a simple example of using the Fluxel.")
+          ]),
+          Fluxel.hr(),
+          Fluxel.div({
+            style: {
+              textAlign: "center",
+            },
+            children: [
+              ...Fluxel.reactive({ counter: 0, opacity: 1, pref: { label: "Counter" },  }, outerState => ([
+                Fluxel.div({
+                  style: {
+                    padding: "20px",
+                    border: "1px solid #ccc",
+                    margin: "20px 0",
+                    display: "inline-block",
+                    opacity: outerState.use("opacity"),
+                  },
+                  dataset: {
+                    reactive: "true",
+                    counter: outerState.use("counter"),
+                  },
+                  children: [
+                    ...Fluxel.reactive({ level: 1 }, innerState => [
+                      innerState.use("level", level => Fluxel[`h${level}`](outerState.use("counter", counter => Fluxel.span(`Reactive Counter: ${counter}`)))),
+                      Fluxel.p("Click the button to increment the counter:"),
+                      Fluxel.p(outerState.use(["counter", "pref"], ({ counter, pref }) => `Current value: ${counter} (${pref.label})`)),
+                      Fluxel.p(outerState.use("counter").derive(counter => `The square of ${counter} is ${counter * counter}`)),
+                      Fluxel.p("Use the buttons below to interact with the counter:"),
+                      Fluxel.p([
+                        Fluxel.button({
+                          children: "Increment",
+                          onclick: () => {
+                            outerState.counter++;
+                          }
+                        }),
+                        Fluxel.button({
+                          children: "Reset",
+                          onclick: () => {
+                            outerState.counter = 0;
+                          }
+                        }),
+                      ]),
+                      Fluxel.p([
+                        ...Fluxel.useUniqueString(id => [
+                          Fluxel.label({
+                            htmlFor: id,
+                            children: "Label: "
+                          }),
+                          Fluxel.input({
+                            type: "text",
+                            placeholder: "Counter",
+                            id,
+                            oninput: (event) => {
+                              outerState.pref.label = event.target.value || "Counter";
+                              outerState.render();
+                            }
+                          }),
+                        ]),
+                      ]),
+                      Fluxel.p([
+                        ...Fluxel.useUniqueString(id => [
+                          Fluxel.label({
+                            htmlFor: id,
+                            children: "Opacity: "
+                          }),
+                          Fluxel.input({
+                            type: "range",
+                            id,
+                            min: 10,
+                            max: 100,
+                            value: outerState.use("opacity", s => s * 100).value,
+                            oninput: (event) => {
+                              outerState.opacity = Number(event.target.value) / 100;
+                            }
+                          })
+                        ])
+                      ]),
+                      Fluxel.p([
+                        ...Fluxel.useUniqueString(id => [
+                          Fluxel.label({
+                            htmlFor: id,
+                            children: "Level: "
+                          }),
+                          Fluxel.select({
+                            id,
+                            children: [
+                              Fluxel.option({ value: 1, children: "Level 1" }),
+                              Fluxel.option({ value: 2, children: "Level 2" }),
+                              Fluxel.option({ value: 3, children: "Level 3" }),
+                              Fluxel.option({ value: 4, children: "Level 4" }),
+                              Fluxel.option({ value: 5, children: "Level 5" }),
+                              Fluxel.option({ value: 6, children: "Level 6" }),
+                            ],
+                            onchange: (event) => {
+                              innerState.level = Number(event.target.value);
+                            },
+                          }),
+                        ]),
+                      ]),
+                      // Conditional rendering based on the counter value
+                      // Note: If you use state#use as one of items of children,
+                      //       you have to manage the return type of "derive" functions to be `HTMLElement` or `string`, not `HTMLElement | string`.
+                      //       Because the type of the child will be determined in the first render, and it will not change in the next renders.
+                      //       If you want to eliminate this limitation, you have to wrap the whole children with state#use (outerState#use in this context).
+                      outerState.use("counter", counter => counter > 0 ? Fluxel.hr() : Fluxel.span()),
+                      Fluxel.ul(
+                        outerState.use("counter", (counter, memo) => {
+                          return Fluxel.fragment(Array.from({ length: counter }, (_, i) => i + 1).map(num =>
+                            memo(() => Fluxel.li({
+                              classList: `item-${num}`,
+                              children: `Item ${num}`
+                            }), num, true) // Memoize each item
+                          ), {
+                            classList: "item-list",
+                          });
+                        }),
+                      ),
+                    ]),
+                  ],
+                }),
+              ])),
+            ]
+          })
+        );
+
+        document.body.appendChild(ReactiveCounter());
+      });
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

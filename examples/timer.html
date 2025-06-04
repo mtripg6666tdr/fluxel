@@ -3,9 +3,8 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Timer Example</title>
-    <script src="./minimal-commonjs-engine.js"></script>
-    <script src="./library-loader.js"></script>
+    <title>Fluxel Advanced Timer Example</title>
+    <script src="./dist/fluxel-reactive.min.js"></script>
     <style>
       body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background-color: #f4f4f4; }
       .timer-container {
@@ -119,11 +118,9 @@
       }
     </style>
     <script>
-      doAfterLoad(() => {
-        const createElement = require("create-element");
-
+      window.addEventListener("load", () => {
         // --- TimeSetterComponent ---
-        const TimeSetterComponent = createElement.component(
+        const TimeSetterComponent = Fluxel.createComponent(
           (props, state) => {
             const increment = () => {
               props.onIncrement();
@@ -135,17 +132,17 @@
 
             const displayValue = props.value.derive(val => String(val).padStart(2, '0'));
 
-            return createElement.div({
+            return Fluxel.div({
               children: [
-                createElement.button({
+                Fluxel.button({
                   children: '+ ' + props.label,
                   onclick: increment,
                 }),
-                createElement.p({
+                Fluxel.p({
                   style: { margin: '0' },
                   children: displayValue
                 }),
-                createElement.button({
+                Fluxel.button({
                   children: '- ' + props.label,
                   onclick: decrement,
                 }),
@@ -164,7 +161,7 @@
 
         // --- TimeSettingControlsComponent ---
         // minutesとsecondsの状態をこのコンポーネントが管理する
-        const TimeSettingControlsComponent = createElement.component(
+        const TimeSettingControlsComponent = Fluxel.createStatefulComponent(
           (props, state) => {
             // state.minutes と state.seconds を直接読み書きする
             const handleSetMinutes = (amount) => {
@@ -198,7 +195,7 @@
               props.onTimeChange((finalMinutes * 60) + finalSeconds);
             };
 
-            return createElement.div({
+            return Fluxel.div({
               classList: 'time-set-controls',
               children: [
                 TimeSetterComponent({
@@ -225,7 +222,7 @@
 
 
         // --- CountdownTimerComponent ---
-        const CountdownTimerComponent = createElement.component(
+        const CountdownTimerComponent = Fluxel.createStatefulComponent(
           (props, state) => {
             let intervalId = null;
 
@@ -328,10 +325,10 @@
               }
             };
 
-            return createElement.div({
+            return Fluxel.div({
               classList: 'timer-container',
               children: [
-                createElement.p({
+                Fluxel.p({
                   classList: 'timer-label',
                   children: state.use(['isRunning', 'isCountdownMode'], ({ isRunning, isCountdownMode }) => {
                     if (isRunning) {
@@ -340,13 +337,13 @@
                     return isCountdownMode ? 'Set Your Time (Countdown)' : 'Ready for Count-up (00:00)';
                   })
                 }),
-                createElement.div({
+                Fluxel.div({
                   classList: 'timer-display',
                   children: formattedTime
                 }),
                 // TimeSettingControlsComponent をラップする div は常に存在し、
                 // その children を state.use で動的に変更する
-                createElement.div({
+                Fluxel.div({
                   children: state.use(['isCountdownMode', 'isRunning', 'totalSeconds'], ({ isCountdownMode, isRunning, totalSeconds }, memo) => {
                     const timeSettingControlsComponent = memo(() => TimeSettingControlsComponent({
                       onTimeChange: (newTotalSeconds) => {
@@ -367,11 +364,11 @@
                     return [];
                   }),
                 }),
-                createElement.div({
+                Fluxel.div({
                   classList: 'main-controls',
                   children: [
                     state.use(['isRunning', 'count', 'totalSeconds', 'isCountdownMode'], ({ isRunning, count, totalSeconds, isCountdownMode }, memo) => {
-                      const stopButton = memo(() => createElement.button({
+                      const stopButton = memo(() => Fluxel.button({
                         classList: ['stop-active', 'main-control-button'],
                         children: 'Stop',
                         onclick: stopTimer,
@@ -384,7 +381,7 @@
                       const startResumeButton = memo(() => {
                         console.log("Start/Resume button (re-)created");
 
-                        return createElement.button({
+                        return Fluxel.button({
                           classList: ['start-stop', 'main-control-button'],
                           children: buttonText,
                           onclick: startTimer,
@@ -398,7 +395,7 @@
                         return startResumeButton;
                       }
                     }),
-                    createElement.button({
+                    Fluxel.button({
                       classList: 'reset',
                       children: 'Reset',
                       onclick: resetTimer,
@@ -409,14 +406,14 @@
                   ],
                 }),
                 // --- 音声ファイル選択UIの追加 ---
-                createElement.div({
+                Fluxel.div({
                   classList: 'audio-control',
                   children: [
-                    createElement.label({
+                    Fluxel.label({
                       htmlFor: 'audioFile',
                       children: 'Select Alarm Sound'
                     }),
-                    createElement.input({
+                    Fluxel.input({
                       type: 'file',
                       id: 'audioFile',
                       accept: 'audio/*', // 音声ファイルのみを許可
@@ -425,7 +422,7 @@
                       },
                       onchange: handleFileChange,
                     }),
-                    createElement.p({
+                    Fluxel.p({
                       classList: 'file-name',
                       children: state.use('selectedFileName', (name) => name || 'No file selected')
                     })

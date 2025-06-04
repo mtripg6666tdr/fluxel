@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluxel ToDo List</title>
+    <script src="./dist/fluxel-reactive.min.js"></script>
+    <script>
+      window.addEventListener("load", () => {
+        // --- TodoInput Component ---
+        const TodoInput = Fluxel.createStatefulComponent(
+          (props, state) => {
+            const handleAdd = () => {
+              if (state.newTodoText.trim() !== '') {
+                props.onAdd(state.newTodoText.trim());
+                state.newTodoText = '';
+              }
+            };
+
+            return Fluxel.fragment([
+              Fluxel.style(`
+                /* Styles encapsulated within TodoInput component */
+                .todo-input-section {
+                  display: flex;
+                  margin-bottom: 15px;
+                }
+                .todo-input {
+                  flex-grow: 1;
+                  padding: 10px;
+                  border: 1px solid #ddd;
+                  border-radius: 4px;
+                  font-size: 1rem;
+                }
+                .todo-input:focus {
+                  outline: none;
+                  border-color: #4CAF50;
+                }
+                .add-button {
+                  padding: 10px 15px;
+                  background: #4CAF50; /* Green */
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-size: 1rem;
+                  margin-left: 10px;
+                }
+                .add-button:hover {
+                  background: #45a049;
+                }
+              `),
+              Fluxel.div({
+                classList: 'todo-input-section',
+                children: [
+                  Fluxel.input({
+                    type: 'text',
+                    placeholder: 'Add a new todo',
+                    value: state.use('newTodoText'),
+                    oninput: (e) => {
+                      state.newTodoText = e.target.value;
+                    },
+                    onkeydown: (e) => {
+                      if (e.key === 'Enter') {
+                        handleAdd();
+                      }
+                    },
+                    classList: 'todo-input',
+                  }),
+                  Fluxel.button({
+                    children: 'Add',
+                    onclick: handleAdd,
+                    classList: 'add-button',
+                  })
+                ]
+              })
+            ]);
+          },
+          { newTodoText: '' }
+        );
+
+        // --- TodoList Component ---
+        const TodoList = Fluxel.createStatefulComponent(
+          (props) => {
+            const handleDelete = (indexToDelete) => {
+              props.onDelete(indexToDelete);
+            };
+
+            return Fluxel.fragment([
+              Fluxel.style(`
+                /* Styles encapsulated within TodoList component */
+                .todo-list-container {
+                  list-style: none;
+                  padding: 0;
+                  margin-top: 10px;
+                }
+                .todo-item {
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  padding: 8px 0;
+                  border-bottom: 1px solid #eee;
+                }
+                .todo-item:last-child {
+                  border-bottom: none;
+                }
+                .todo-text {
+                  flex-grow: 1;
+                }
+                .delete-button {
+                  margin-left: 10px;
+                  background: #dc3545; /* Bootstrap's danger color */
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  padding: 5px 10px;
+                  cursor: pointer;
+                }
+                .delete-button:hover {
+                  opacity: 0.8;
+                }
+              `),
+              Fluxel.ul({
+                classList: 'todo-list-container',
+                children: props.todos.derive(currentTodos => {
+                  console.log("Rendering TodoList with todos:", currentTodos);
+                  return currentTodos.map((todo, index) =>
+                    props.memo(() => Fluxel.li({
+                      classList: 'todo-item',
+                      children: [
+                        Fluxel.span({ classList: 'todo-text', children: todo }),
+                        Fluxel.button({
+                          children: 'X',
+                          onclick: () => handleDelete(props.todos.value.indexOf(todo)),
+                          classList: 'delete-button',
+                        })
+                      ]
+                    }), todo, true)
+                  )
+                })
+              })
+            ]);
+          },
+          {}
+        );
+
+        // --- TodoApp Component (formerly AppState) ---
+        // This component manages the overall state (todos array) and orchestrates sub-components.
+        const TodoApp = Fluxel.createStatefulComponent(
+          (props, state) => {
+            console.log("Rendering ToDoApp");
+
+            const handleAddTodo = (newTodo) => {
+              if (state.todos.includes(newTodo)) {
+                // Alert if the todo already exists
+                // Note: every li element for each todo items are memoized based on the todo text,
+                //       so if the same todo text is added, the same li element will be appeared twice in the same list.
+                //       This is a limitation of the pure-mode memoization.
+                alert("This todo already exists!");
+                return;
+              }
+              state.todos.push(newTodo);
+              state.render(); // Notify state change to re-render TodoList
+            };
+
+            const handleDeleteTodo = (indexToDelete) => {
+              state.todos.splice(indexToDelete, 1);
+              state.render(); // Notify state change to re-render TodoList
+            };
+
+            const [todos, memo] = state.useWithMemo('todos');
+
+            return Fluxel.div({
+              style: { maxWidth: '400px', margin: '20px auto', border: '1px solid #ccc', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' },
+              children: [
+                Fluxel.style(`
+                  /* Global/App-level styles */
+                  body {
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    background-color: #f4f4f4;
+                    color: #333;
+                  }
+                  .app-title {
+                    text-align: center;
+                    color: #2c3e50;
+                    margin-bottom: 20px;
+                  }
+                `),
+                Fluxel.h2({ classList: 'app-title', children: 'My Todo List' }),
+                TodoInput({ onAdd: handleAddTodo }),
+                // Spread the TodoList component's return value (which is an array from fragment)
+                TodoList({
+                  todos,
+                  onDelete: handleDeleteTodo,
+                  memo,
+                })
+              ]
+            });
+          },
+          { todos: ["Learn create-element", "Build something awesome"] } // Initial state for TodoApp
+        );
+
+        document.body.appendChild(TodoApp());
+      });
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

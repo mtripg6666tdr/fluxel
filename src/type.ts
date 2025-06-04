@@ -12,47 +12,56 @@ export type FunctionProps<T> = {
   : never
 }[keyof T];
 
-export type NarrowReturnType<T extends (...args: any[]) => any, Return> = T extends (...args: infer R) => infer OldReturn
-  ? Return extends OldReturn
-  ? (...args: R) => Return
-  : never
-  : never;
-
-export type CanBeArray<T> = T | T[];
-export type ChildrenType<T extends Node = Node> = CanBeArray<CanBeReactive<string | T>>;
-export type ChildrenTypeNoReactiveNodes<T extends Node = Node> = CanBeArray<string | T | ReactiveDependency<string>>;
+export type ChildrenType<T extends Node = Node> =
+  | FixedLengthChildrenType<T>
+  | ReactiveDependency<string[]>
+  | ReactiveDependency<T[]>
+  | ReactiveDependency<(string | T)[]>;
+export type FixedLengthChildrenType<T extends Node = Node> =
+  | string
+  | T
+  | ReactiveDependency<string>
+  | ReactiveDependency<T>
+  | (string | T | ReactiveDependency<string> | ReactiveDependency<T>)[];
 
 export type CanBeReactiveMap<T> = { [key in keyof T]: CanBeReactive<T[key]> };
 export type CanBeReactive<T> = T | ReactiveDependency<T>;
 
-export type FluxelInternalOptions<K extends keyof HTMLElementTagNameMap> =
-  FluxelInternalOptionsFromNode<HTMLElementTagNameMap[K]>;
+export type FluxelInternalOptions<K extends keyof HTMLElementTagNameMap, C = ChildrenType> =
+  FluxelInternalOptionsFromNode<HTMLElementTagNameMap[K], C>;
 
-export type FluxelInternalOptionsFromNode<K extends Node> =
+export type FluxelInternalOptionsFromNode<K extends Node, C = ChildrenType> =
   & Omit<{ [key in NotFunctionProps<K>]?: CanBeReactive<K[key]> }, "children" | "style" | "textContent" | "className" | "classList" | "dataset">
   & { [key in Exclude<FunctionProps<K>, keyof Node>]?: key extends `on${string}`
     ? K[key] | K[key][]
-    : K[key] }
+    : K[key] extends Function
+      ? never
+      : K[key] }
   & {
-    children?: ChildrenType | null | undefined,
+    children?: C | null | undefined,
     style?: Partial<CanBeReactiveMap<CSSStyleDeclaration>> | null | undefined,
-    classList?: CanBeReactive<string | DOMTokenList | string[] | Set<string>> | CanBeReactive<string>[] | null | undefined,
+    classList?: CanBeReactive<string | DOMTokenList | (string | false | null | undefined)[] | Set<string | false | null | undefined>> | CanBeReactive<string | false | null | undefined>[] | null | undefined,
     dataset?: Record<string, string | ReactiveDependency<string>> | null | undefined,
   };
 
-export type StateParam<T extends object> = { [key in keyof T]: ReactiveDependency<T[key]> } & {
+export type StateParam<T extends object> = T & {
   render: () => void,
   use: ReactiveDependencyUse<T>,
   useWithMemo<K extends keyof T>(key: K): [ReactiveDependency<T[K]>, <MT>(factory: () => MT, deps: any[], pure?: boolean) => MT ],
+  listenTarget: EventTarget,
 };
 
 export type MemoizeFunction = <MT>(factory: () => MT, deps: any[], pure?: boolean) => MT;
 
 export interface ReactiveDependencyUse<T extends object> {
   <K extends keyof T>(key: K): ReactiveDependency<T[K]>,
-  <K extends keyof T, R>(key: K, deriveFn: (v: T[K], memo?: MemoizeFunction) => R): ReactiveDependency<R>,
+  <K extends keyof T, R>(key: K, deriveFn: (v: T[K], memo: MemoizeFunction) => R): ReactiveDependency<R>,
   <K extends (keyof T)[], R>(
     key: K,
     deriveFn: (v: { [key in K[number]]: T[key] }, memo: MemoizeFunction) => R
   ): ReactiveDependency<R>,
 }
+
+export type FluxelComponent<P extends object, R extends ChildrenType | FluxelJSXElement> = (props?: P) => R;
+
+export declare class FluxelJSXElement {}
