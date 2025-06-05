@@ -113,7 +113,7 @@ import Fluxel from "fluxel/jsx-reactive-legacy";
 
 ### Installation via CDN
 
-Instead of installing via package managers like npm, you can load it directly into your HTML from a CDN.
+Instead of installing via package managers like npm, you can load it directly into your HTML from a CDN like [jsDelivr](https://www.jsdelivr.com/).
 
 * If you don't need reactivity, paste the following into your `<head>`:
   ```html
@@ -125,7 +125,19 @@ Instead of installing via package managers like npm, you can load it directly in
   <script src="https://cdn.jsdelivr.net/npm/fluxel@x.x/dist/browser/fluxel-reactive.min.js"></script>
   ```
 
-Please replace `x.x` with the appropriate version number.
+For ES Modules usage, you can import Fluxel directly from [esm.run](https://www.jsdelivr.com/esm). This is useful when you want to use `import` statements in your browser-side JavaScript without a bundler.
+
+* If you don't need reactivity:
+  ```js
+  import Fluxel from 'https://esm.run/fluxel@x.x';
+  ```
+
+* If reactivity is required:
+  ```js
+  import Fluxel from 'https://esm.run/fluxel@x.x/reactive';
+  ```
+
+Please replace `x.x` with the appropriate version number for all CDN and ES Modules links.
 
 ## Usage
 

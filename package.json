@@ -1,6 +1,6 @@
 {
   "name": "fluxel",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Build fast web UIs with Fluxel: the minimal, reactive library designed for ultimate performance.",
   "keywords": [
     "ui-library",
@@ -74,6 +74,7 @@
     "build:types": "tsc",
     "prebuild": "node ./tools/bakeElement.cjs",
     "postbuild": "node ./tools/patchCommonJs.mjs",
+    "prepublishOnly": "npm run cleanup && npm run build",
     "cleanup": "rimraf dist examples/dist",
     "typecheck": "tsc --noEmit"
   },
