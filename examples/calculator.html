@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluxel Calculator</title>
+    <!-- Load Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Set default font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Button gradient and neumorphism-style shadow */
+        .calculator-button {
+            background: linear-gradient(145deg, #e0e0e0, #ffffff);
+            box-shadow: 7px 7px 15px #bebebe, -7px -7px 15px #ffffff;
+        }
+        .calculator-button:hover {
+            transform: scale(1.05);
+        }
+        /* Combine active effects for keyboard input and click */
+        .calculator-button.active-key-effect,
+        .calculator-button:active {
+            transform: scale(0.95);
+            box-shadow: inset 5px 5px 10px #b0b0b0, inset -5px -5px 10px #f0f0f0; /* Inset shadow when active */
+        }
+        /* Display inset shadow */
+        .display-shadow {
+            box-shadow: inset 5px 5px 10px #b0b0b0, inset -5px -5px 10px #f0f0f0;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100 flex items-center justify-center font-sans p-4">
+    <!-- Load Fluxel from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/fluxel@latest/dist/browser/fluxel-reactive.min.js"></script>
+
+    <!-- Application code script -->
+    <script>
+        // Define Button Component
+        // This component renders a single calculator button with its styles and event handlers.
+        const Button = window.Fluxel.createComponent((props) => {
+            // Split className string into individual class names for classList.
+            const classNamesArray = props.className ? props.className.split(' ') : [];
+            const attributes = {
+                onclick: props.onClickFn,
+                classList: [
+                    'p-4', 'rounded-xl', 'font-semibold', 'text-2xl',
+                    'transition', 'duration-200', 'ease-in-out',
+                    'hover:scale-105',
+                    'focus:outline-none', // Remove focus outline
+                    'calculator-button', // Custom style class
+                    ...classNamesArray // Spread individual class names
+                ],
+                children: props.label
+            };
+            // Set data-key attribute using dataset property for keyboard input mapping.
+            if (props.dataKey) {
+                attributes.dataset = { ... (attributes.dataset || {}), key: props.dataKey };
+            }
+            return window.Fluxel.button(attributes);
+        });
+
+        // Define main calculator component
+        const CalculatorApp = window.Fluxel.createStatefulComponent((props, state) => {
+            // Manage calculator state
+            // Initial state is set in the second argument of createStatefulComponent.
+
+            // Handle digit button click
+            const handleDigitClick = (digit) => {
+                state.error = null; // Clear error
+                if (state.waitingForNewInput) {
+                    state.currentInput = String(digit);
+                    state.waitingForNewInput = false;
+                } else {
+                    if (state.currentInput === '0' && digit !== '.') {
+                        state.currentInput = String(digit);
+                    } else if (digit === '.' && state.currentInput.includes('.')) {
+                        return; // Do nothing if decimal already exists
+                    } else {
+                        state.currentInput += String(digit);
+                    }
+                }
+            };
+
+            // Handle operator button click
+            const handleOperatorClick = (nextOperator) => {
+                state.error = null; // Clear error
+                const inputValue = parseFloat(state.currentInput);
+
+                if (state.previousValue === null) {
+                    state.previousValue = inputValue;
+                } else if (!state.waitingForNewInput) {
+                    const result = calculate(state.previousValue, state.operator, inputValue);
+                    if (result === 'Error') {
+                        state.error = 'Error: Division by zero or invalid operation';
+                        state.currentInput = '0';
+                        state.previousValue = null;
+                        state.operator = null;
+                        state.waitingForNewInput = false;
+                        return;
+                    }
+                    state.currentInput = String(result);
+                    state.previousValue = result;
+                }
+                state.operator = nextOperator;
+                state.waitingForNewInput = true;
+            };
+
+            // Handle equals button click
+            const handleEqualsClick = () => {
+                state.error = null; // Clear error
+                if (state.operator === null || state.previousValue === null) {
+                    return;
+                }
+
+                const result = calculate(state.previousValue, state.operator, parseFloat(state.currentInput));
+                if (result === 'Error') {
+                    state.error = 'Error: Division by zero or invalid operation';
+                    state.currentInput = '0';
+                } else {
+                    state.currentInput = String(result);
+                }
+                state.previousValue = null;
+                state.operator = null;
+                state.waitingForNewInput = true;
+            };
+
+            // Handle clear button click
+            const handleClearClick = () => {
+                state.currentInput = '0';
+                state.operator = null;
+                state.previousValue = null;
+                state.waitingForNewInput = false;
+                state.error = null;
+            };
+
+            // Handle backspace button click
+            const handleBackspaceClick = () => {
+                state.error = null; // Clear error
+                if (state.waitingForNewInput) {
+                    state.currentInput = '0';
+                    state.waitingForNewInput = false;
+                } else if (state.currentInput.length > 1) {
+                    state.currentInput = state.currentInput.slice(0, -1);
+                } else {
+                    state.currentInput = '0';
+                }
+            };
+
+            // Calculation logic
+            const calculate = (prev, op, current) => {
+                switch (op) {
+                    case '+': return prev + current;
+                    case '-': return prev - current;
+                    case '*': return prev * current;
+                    case '/':
+                        if (current === 0) return 'Error';
+                        return prev / current;
+                    default: return current;
+                }
+            };
+
+            return window.Fluxel.div({
+                classList: ['bg-gray-200', 'p-6', 'rounded-3xl', 'shadow-2xl', 'w-full', 'max-w-sm', 'mx-auto'],
+                style: {
+                    background: 'linear-gradient(145deg, #e0e0e0, #ffffff)',
+                    boxShadow: '20px 20px 40px #bebebe, -20px -20px 40px #ffffff'
+                },
+                children: [
+                    // Display screen
+                    window.Fluxel.div({
+                        classList: ['bg-gray-300', 'p-4', 'mb-6', 'rounded-xl', 'text-right', 'text-4xl', 'font-bold', 'text-gray-800', 'overflow-hidden', 'relative', 'display-shadow'],
+                        style: { minHeight: '80px' },
+                        children: [
+                            // Error display
+                            state.use('error', err => err ? (
+                                window.Fluxel.p({ classList: ['text-red-600', 'text-lg', 'absolute', 'bottom-2', 'right-4'], children: err })
+                            ) : window.Fluxel.span()),
+                            // Current input value
+                            window.Fluxel.p({ classList: ['truncate'], children: state.use('currentInput', input => input !== null ? String(input) : '0') })
+                        ]
+                    }),
+                    // Button grid
+                    window.Fluxel.div({
+                        classList: ['grid', 'grid-cols-4', 'gap-4'],
+                        children: [
+                            // Use Button component
+                            Button({ label: 'C', className: 'bg-red-400 text-gray-800 col-span-2', onClickFn: handleClearClick, dataKey: 'C' }),
+                            Button({ label: '←', className: 'bg-gray-400 text-gray-800', onClickFn: handleBackspaceClick, dataKey: 'Backspace' }),
+                            Button({ label: '/', className: 'bg-blue-500 text-gray-800', onClickFn: () => handleOperatorClick('/'), dataKey: '/' }),
+
+                            Button({ label: '7', className: 'bg-gray-300 text-gray-800', onClickFn: () => handleDigitClick(7), dataKey: '7' }),
+                            Button({ label: '8', className: 'bg-gray-300 text-gray-800', onClickFn: () => handleDigitClick(8), dataKey: '8' }),
+                            Button({ label: '9', className: 'bg-gray-300 text-gray-800', onClickFn: () => handleDigitClick(9), dataKey: '9' }),
+                            Button({ label: '*', className: 'bg-blue-500 text-gray-800', onClickFn: () => handleOperatorClick('*'), dataKey: '*' }),
+
+                            Button({ label: '4', className: 'bg-gray-300 text-gray-800', onClickFn: () => handleDigitClick(4), dataKey: '4' }),
+                            Button({ label: '5', className: 'bg-gray-300 text-gray-800', onClickFn: () => handleDigitClick(5), dataKey: '5' }),
+                            Button({ label: '6', className: 'bg-gray-300 text-gray-800', onClickFn: () => handleDigitClick(6), dataKey: '6' }),
+                            Button({ label: '-', className: 'bg-blue-500 text-gray-800', onClickFn: () => handleOperatorClick('-'), dataKey: '-' }),
+
+                            Button({ label: '1', className: 'bg-gray-300 text-gray-800', onClickFn: () => handleDigitClick(1), dataKey: '1' }),
+                            Button({ label: '2', className: 'bg-gray-300 text-gray-800', onClickFn: () => handleDigitClick(2), dataKey: '2' }),
+                            Button({ label: '3', className: 'bg-gray-300 text-gray-800', onClickFn: () => handleDigitClick(3), dataKey: '3' }),
+                            Button({ label: '+', className: 'bg-blue-500 text-gray-800', onClickFn: () => handleOperatorClick('+'), dataKey: '+' }),
+
+                            Button({ label: '0', className: 'bg-gray-300 text-gray-800 col-span-2', onClickFn: () => handleDigitClick(0), dataKey: '0' }),
+                            Button({ label: '.', className: 'bg-gray-300 text-gray-800', onClickFn: () => handleDigitClick('.'), dataKey: '.' }),
+                            Button({ label: '=', className: 'bg-green-500 text-gray-800', onClickFn: handleEqualsClick, dataKey: '=' })
+                        ]
+                    })
+                ]
+            });
+        }, { // Initial state
+            currentInput: '0',
+            operator: null,
+            previousValue: null,
+            waitingForNewInput: false,
+            error: null,
+        });
+
+        // Keyboard input handler
+        const handleKeyDown = (event) => {
+            event.preventDefault(); // Prevent default event behavior
+
+            let keyToMatch = event.key;
+
+            // Map keyboard keys to button data-keys
+            switch (event.key) {
+                case 'Escape':
+                    keyToMatch = 'C'; // Maps to Clear button
+                    break;
+                case 'Backspace':
+                    keyToMatch = 'Backspace'; // Maps to Backspace button
+                    break;
+                case 'Enter':
+                case 'NumpadEnter': // Also for Numpad Enter
+                    keyToMatch = '='; // Maps to Equals button
+                    break;
+                // Numpad keys (digits and operators)
+                case 'Numpad0': keyToMatch = '0'; break;
+                case 'Numpad1': keyToMatch = '1'; break;
+                case 'Numpad2': keyToMatch = '2'; break;
+                case 'Numpad3': keyToMatch = '3'; break;
+                case 'Numpad4': keyToMatch = '4'; break;
+                case 'Numpad5': keyToMatch = '5'; break;
+                case 'Numpad6': keyToMatch = '6'; break;
+                case 'Numpad7': keyToMatch = '7'; break;
+                case 'Numpad8': keyToMatch = '8'; break;
+                case 'Numpad9': keyToMatch = '9'; break;
+                case 'NumpadDecimal': keyToMatch = '.'; break;
+                case 'NumpadAdd': keyToMatch = '+'; break;
+                case 'NumpadSubtract': keyToMatch = '-'; break;
+                case 'NumpadMultiply': keyToMatch = '*'; break;
+                case 'NumpadDivide': keyToMatch = '/'; break;
+                // 'c' or 'C' key for clear
+                case 'c':
+                case 'C':
+                    keyToMatch = 'C';
+                    break;
+            }
+            
+            // Find corresponding button element by data-key attribute
+            const button = document.querySelector(`[data-key="${keyToMatch}"]`);
+
+            if (button) {
+                // Programmatically trigger button click handler
+                button.click();
+
+                // Apply active effect class
+                button.classList.add('active-key-effect');
+
+                // Remove active effect class after a short delay
+                setTimeout(() => {
+                    button.classList.remove('active-key-effect');
+                }, 150); // Duration of visual feedback
+            }
+        };
+
+        // Append component to body and set keyboard event listener after DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.appendChild(CalculatorApp());
+            document.addEventListener('keydown', handleKeyDown);
+        });
+    </script>
+</body>
+</html>
