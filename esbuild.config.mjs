@@ -53,6 +53,14 @@ const buildConfigs = [
   },
   {
     entryPoints: [{
+        in: './dist/esm/jsx-runtime/index.js',
+        out: './dist/browser/fluxel-jsx-runtime.min',
+    }],
+    globalName: 'FluxelJSXRuntime',
+    banner: banner('jsx-runtime'),
+  },
+  {
+    entryPoints: [{
       in: './dist/esm/h/index.js',
       out: './dist/browser/fluxel-h.min',
     }],

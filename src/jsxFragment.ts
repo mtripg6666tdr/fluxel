@@ -7,7 +7,9 @@ type FragmentProps<T> = T extends Node
 
 const Fragment = Fluxel.createComponent(
   <T>(props: FragmentProps<T>): ChildrenType => {
-    const { children, ...options } = props;
+    const options = Object.assign({}, props) as Omit<FragmentProps<T>, 'children'> & { children?: FragmentProps<T>['children'] };
+    const children = options.children;
+    delete options.children;
 
     return Fluxel.fragment(
       children as any,
