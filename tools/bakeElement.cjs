@@ -44,4 +44,4 @@ const tags = [
 export default tags;
 `.trimStart();
 
-fs.writeFileSync(path.join(__dirname, "src", "tags__generated.ts"), output, "utf-8");
+fs.writeFileSync(path.join(__dirname, "..", "src", "tags__generated.ts"), output, "utf-8");

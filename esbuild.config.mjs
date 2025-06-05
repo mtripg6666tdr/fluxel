@@ -6,46 +6,78 @@ import { build } from 'esbuild';
 import packageJson from './package.json' with { type: 'json' };
 
 const start = performance.now();
-const result = await build({
-  entryPoints: [
-    {
-      in: './dist/esm/index.js',
-      out: './dist/browser/fluxel.min',
-    },
-    {
-      in: './dist/esm/reactive/index.js',
-      out: './dist/browser/fluxel-reactive.min',
-    },
-  ],
+
+const banner = (moduleName) => ({
+  js: `/**\n * ${[
+    `${packageJson.name}${moduleName ? `-${moduleName}` : ''} v${packageJson.version}`,
+    "",
+    `Copyright (c) ${new Date().getFullYear()} ${packageJson.author}`,
+    "",
+    "This source code is licensed under the MIT license found in the",
+    "LICENSE file in the root directory of this source tree.",
+    "",
+    `@see ${packageJson.homepage}`,
+    `@license MIT`,
+  ].join("\n * ")}\n*/`,
+});
+
+/** @satisfies {import('esbuild').BuildOptions} */
+const commonBuildOptions = {
   format: 'iife',
   bundle: true,
   minify: true,
   target: ['chrome58', 'firefox57', 'safari11', 'edge16'],
-  outdir: '.',
-  inject: ['./browserInject.mjs'],
-  globalName: '__Fluxel_esm',
   metafile: true,
-  banner: {
-    js: `/**\n * ${[
-      `${packageJson.name} v${packageJson.version}`,
-      "",
-      `Copyright (c) ${new Date().getFullYear()} ${packageJson.author}`,
-      "",
-      "This source code is licensed under the MIT license found in the",
-      "LICENSE file in the root directory of this source tree.",
-      "",
-      `@see ${packageJson.homepage}`,
-      `@license MIT`,
-    ].join("\n * ")}\n*/`,
+  outdir: '.',
+};
+
+/** @satisfies {import('esbuild').BuildOptions[]} */
+const buildConfigs = [
+  {
+    entryPoints: [{
+        in: './dist/esm/index.js',
+        out: './dist/browser/fluxel.min',
+    }],
+    inject: ['./tools/injects/fluxelBrowserInject.mjs'],
+    globalName: '__Fluxel_esm',
+    banner: banner(''),
+  },
+  {
+    entryPoints: [{
+        in: './dist/esm/reactive/index.js',
+        out: './dist/browser/fluxel-reactive.min',
+    }],
+    inject: ['./tools/injects/fluxelBrowserInject.mjs'],
+    globalName: '__Fluxel_esm',
+    banner: banner('reactive'),
+  },
+  {
+    entryPoints: [{
+      in: './dist/esm/h/index.js',
+      out: './dist/browser/h-factory.min',
+    }],
+    inject: ['./tools/injects/hFactoryBrowserInject.mjs'],
+    globalName: '__HFactory_esm',
+    banner: banner('h-factory'),
+  },
+]
+
+const { input, output } = (await Promise.allSettled(
+  buildConfigs.map(config => build(Object.assign(config, commonBuildOptions)))
+)).reduce((acc, res, index) => {
+  if (res.status === 'fulfilled') {
+    acc.input += res.value.metafile.inputs ? Object.keys(res.value.metafile.inputs).length : 0;
+    acc.output += res.value.metafile.outputs ? Object.keys(res.value.metafile.outputs).length : 0;
+  }else{
+    console.error(`Error during build #${index + 1}:`, res.reason);
   }
-});
+  return acc;
+}, { input: 0, output: 0 });
 const end = performance.now();
 
-console.log(`Successfully compiled: ${
-  Object.keys(result.metafile?.inputs || {}).length || "unknown"
-} files into ${
-  Object.keys(result.metafile?.outputs || {}).length || "unknown"
-} bundles with esbuild (${Math.round(end - start)}ms)`);
+console.log(`Successfully compiled: ${input || "unknown"} files into ${output || "unknown"} bundles with esbuild (${
+  Math.round(end - start)
+}ms)`);
 
 async function copyDir(src, dest) {
   if (!fs.existsSync(dest)) {

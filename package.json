@@ -1,6 +1,6 @@
 {
   "name": "fluxel",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Build fast web UIs with Fluxel: the minimal, reactive library designed for ultimate performance.",
   "keywords": [
     "ui-library",
@@ -67,8 +67,13 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "swc --strip-leading-paths -d dist/esm --config-file esm.swcrc src && swc --strip-leading-paths -d dist/cjs --config-file cjs.swcrc src && node ./esbuild.config.mjs && node patchCommonJs.mjs && tsc",
-    "prebuild": "node ./bakeElement.cjs",
+    "build": "npm run build:esm && npm run build:cjs && npm run build:browser && npm run build:types",
+    "build:esm": "swc --strip-leading-paths -d dist/esm --config-file ./tools/esm.swcrc src",
+    "build:cjs": "swc --strip-leading-paths -d dist/cjs --config-file ./tools/cjs.swcrc src",
+    "build:browser": "node ./esbuild.config.mjs",
+    "build:types": "tsc",
+    "prebuild": "node ./tools/bakeElement.cjs",
+    "postbuild": "node ./tools/patchCommonJs.mjs",
     "cleanup": "rimraf dist examples/dist",
     "typecheck": "tsc --noEmit"
   },

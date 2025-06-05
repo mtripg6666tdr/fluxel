@@ -1,3 +1,5 @@
+#! /usr/bin/env node
+
 import fs from "fs";
 
 if(!fs.existsSync("./dist/cjs")){
