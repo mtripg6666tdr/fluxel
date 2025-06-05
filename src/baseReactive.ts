@@ -18,8 +18,11 @@ Fluxel.reactive = function <T extends object, R extends ChildrenType>(
 
   const pureState = {
     ...initialState,
-    render: <K extends keyof T>(targetProperty?: K) => {
-      pureState.listenTarget.dispatchEvent(new CustomEvent("render", { detail: { property: targetProperty } }) as any);
+    render: <K extends keyof T>(targetProperty?: K, skipEventDispatch = false) => {
+      if(!skipEventDispatch && targetProperty){
+        pureState.listenTarget.dispatchEvent(new CustomEvent(targetProperty as string, { detail: { newValue: pureState[targetProperty] } }) as any);
+      }
+
       if (targetProperty) {
         stateMap[targetProperty]?.listeners.forEach(listener => listener.call(null));
       } else {

@@ -45,8 +45,8 @@ export type FluxelInternalOptionsFromNode<K extends Node, C = ChildrenType> =
   };
 
 export type StateParamListenTargetEventType<T extends object> = {
-  [key in keyof T]: { oldValue: T[key], newValue: T[key] }
-} & { render: { property?: keyof T } };
+  [key in keyof T]: { oldValue?: Readonly<T[key]>, newValue: Readonly<T[key]> }
+};
 
 export type StateParam<T extends object> = T & {
   render: () => void,
