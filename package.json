@@ -1,6 +1,6 @@
 {
   "name": "fluxel",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Build fast web UIs with Fluxel: the minimal, reactive library designed for ultimate performance.",
   "keywords": [
     "ui-library",

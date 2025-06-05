@@ -21,6 +21,7 @@ Fluxel is an ultra-lightweight and high-performance DOM-building library inspire
   - [Basic Functional API Example](#basic-functional-api-example)
   - [Basic Functional API Example with Native DOM Reactivity](#basic-functional-api-example-with-native-dom-reactivity)
   - [Basic JSX Example](#basic-jsx-example)
+  - [Build-Free JSX-like Syntax with HTM and `fluxel/h`](#build-free-jsx-like-syntax-with-htm-and-fluxelh)
   - [Using `classList`](#using-classlist)
   - [Using `fragment` (`Fluxel.fragment`)](#using-fragment-fluxelfragment)
     - [Functional API Example](#functional-api-example)
@@ -125,6 +126,12 @@ Instead of installing via package managers like npm, you can load it directly in
   <script src="https://cdn.jsdelivr.net/npm/fluxel@x.x/dist/browser/fluxel-reactive.min.js"></script>
   ```
 
+* If you plan to use [htm](https://npmjs.com/package/htm) or similar libraries for JSX-like syntax without a build step,
+  include the following in your `<head>` to load the Hyperscript-compatible h function factory.
+  ```html
+  <script src="https://cdn.jsdelivr.net/npm/fluxel@x.x/dist/browser/fluxel-h.min.js"></script>
+  ```
+
 For ES Modules usage, you can import Fluxel directly from [esm.run](https://www.jsdelivr.com/esm). This is useful when you want to use `import` statements in your browser-side JavaScript without a bundler.
 
 * If you don't need reactivity:
@@ -135,6 +142,11 @@ For ES Modules usage, you can import Fluxel directly from [esm.run](https://www.
 * If reactivity is required:
   ```js
   import Fluxel from 'https://esm.run/fluxel@x.x/reactive';
+  ```
+
+* If you need the the Hyperscript-compatible h function factory for [htm](https://npmjs.com/package/htm) or similar libraries:
+  ```js
+  import FluxelHFactory from 'https://esm.run/fluxel@x.x/h';
   ```
 
 Please replace `x.x` with the appropriate version number for all CDN and ES Modules links.
@@ -232,6 +244,31 @@ import Fluxel, { type FluxelJSXElement } from "fluxel/jsx-reactive";
 const instance: FluxelJSXElement = <MyComponent />;
 const node: Node = Fluxel.ensureNode(instance);
 ```
+
+### Build-Free JSX-like Syntax with HTM and `fluxel/h`
+
+If you want to use JSX-like syntax directly in the browser without a build tool, you can combine the [htm](https://npmjs.com/package/htm) library with Fluxel's `fluxel/h` module. The `fluxel/h` module provides a `FluxelHFactory` function, which takes a Fluxel instance and returns a [Hyperscript](https://github.com/hyperhype/hyperscript)-compatible `h` function. This `h` function can then be bound to `htm`.
+
+This approach allows you to write declarative UI code similar to JSX directly in your HTML, leveraging Fluxel's rendering capabilities without the need for a compilation step.
+
+```js
+const h = FluxelHFactory(Fluxel);
+const html = htm.bind(h);
+
+const myElement = Fluxel.createComponent(() => html`
+    <div>Hello from HTM + Fluxel!</div>
+`);
+
+document.body.appendChild(myElement);
+```
+
+While the `h` function provided by `FluxelHFactory` is designed to be [Hyperscript](https://github.com/hyperhype/hyperscript)-compatible, it's important to clarify that it doesn't support all Hyperscript variations. Specifically, it does not support:
+
+  * Class or ID attributes directly in the tag name (e.g., `h('div#myId.myClass', ...)`)
+  * String-based `style` attributes (e.g., `h('div', { style: 'color: red;' })`)
+  * Kebab-case keys in the `style` object (e.g., `h('div', { style: { 'background-color': 'blue' } })`). Use camelCase instead (`backgroundColor`).
+
+Additionally, consistent with other Fluxel functions, you must use `classList` instead of className for applying CSS classes. See the below section for more details. These constraints are a deliberate decision to minimize the bundle size of `FluxelHFactory`.
 
 ### Using `classList`
 

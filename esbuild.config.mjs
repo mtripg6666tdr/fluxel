@@ -54,7 +54,7 @@ const buildConfigs = [
   {
     entryPoints: [{
       in: './dist/esm/h/index.js',
-      out: './dist/browser/h-factory.min',
+      out: './dist/browser/fluxel-h.min',
     }],
     inject: ['./tools/injects/hFactoryBrowserInject.mjs'],
     globalName: '__HFactory_esm',
