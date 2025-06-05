@@ -32,11 +32,11 @@ export type FluxelInternalOptions<K extends keyof HTMLElementTagNameMap, C = Chi
 
 export type FluxelInternalOptionsFromNode<K extends Node, C = ChildrenType> =
   & Omit<{ [key in NotFunctionProps<K>]?: CanBeReactive<K[key]> }, "children" | "style" | "textContent" | "className" | "classList" | "dataset">
-  & { [key in Exclude<FunctionProps<K>, keyof Node>]?: key extends `on${string}`
+  & Omit<{ [key in Exclude<FunctionProps<K>, keyof Node>]?: key extends `on${string}`
     ? K[key] | K[key][]
     : K[key] extends Function
       ? never
-      : K[key] }
+      : K[key] }, "toString">
   & {
     children?: C | null | undefined,
     style?: Partial<CanBeReactiveMap<CSSStyleDeclaration>> | null | undefined,
@@ -44,11 +44,15 @@ export type FluxelInternalOptionsFromNode<K extends Node, C = ChildrenType> =
     dataset?: Record<string, string | ReactiveDependency<string>> | null | undefined,
   };
 
+export type StateParamListenTargetEventType<T extends object> = {
+  [key in keyof T]: { oldValue: T[key], newValue: T[key] }
+} & { render: { property?: keyof T } };
+
 export type StateParam<T extends object> = T & {
   render: () => void,
   use: ReactiveDependencyUse<T>,
   useWithMemo<K extends keyof T>(key: K): [ReactiveDependency<T[K]>, <MT>(factory: () => MT, deps: any[], pure?: boolean) => MT ],
-  listenTarget: EventTarget,
+  listenTarget: TypedEventTarget<StateParamListenTargetEventType<T>>,
 };
 
 export type MemoizeFunction = <MT>(factory: () => MT, deps: any[], pure?: boolean) => MT;
@@ -70,3 +74,9 @@ export type HydrationMetadata = {
   getElementByEid(eid: string): HTMLElement,
   count: number,
 };
+
+export declare class TypedEventTarget<T> {
+  addEventListener<K extends keyof T>(type: K, listener: (this: TypedEventTarget<T>, ev: CustomEvent<T[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+  removeEventListener<K extends keyof T>(type: K, listener: (this: TypedEventTarget<T>, ev: CustomEvent<T[K]>) => any, options?: boolean | EventListenerOptions): void;
+  dispatchEvent<K extends keyof T>(event: CustomEvent<T[K]>): boolean;
+}

@@ -19,6 +19,7 @@ Fluxel is an ultra-lightweight and high-performance DOM-building library inspire
   - [Installation via CDN](#installation-via-cdn)
 - [Usage](#usage)
   - [Basic Functional API Example](#basic-functional-api-example)
+  - [Basic Functional API Example with Native DOM Reactivity](#basic-functional-api-example-with-native-dom-reactivity)
   - [Basic JSX Example](#basic-jsx-example)
   - [Using `classList`](#using-classlist)
   - [Using `fragment` (`Fluxel.fragment`)](#using-fragment-fluxelfragment)
@@ -119,7 +120,7 @@ Please replace `x.x` with the appropriate version number.
 ```tsx
 import Fluxel from 'fluxel';
 
-const myDiv = fluxel.div('Hello, World!');
+const myDiv = Fluxel.div('Hello, World!');
 document.body.appendChild(myDiv); // <div>Hello, World!</div>
 
 const button = Fluxel.button({
@@ -131,6 +132,49 @@ const button = Fluxel.button({
 });
 document.body.appendChild(button);
 ```
+
+### Basic Functional API Example with Native DOM Reactivity
+This is a minimal example of `ToDo List` without fluxel's reactivity.
+```js
+import Fluxel from "fluxel";
+
+const TodoItem = Fluxel.createComponent(({ text }) => Fluxel.div([
+  Fluxel.input({
+      type: "checkbox",
+      onchange: e => e.target.closest("div").querySelector("span").style.textDecoration = e.target.checked ? "line-through" : "",
+  }),
+  Fluxel.span(text),
+  Fluxel.a({
+      onclick: e => e.target.closest("div").remove(),
+      children: "❌",
+  }),
+]));
+
+const TodoList = Fluxel.createComponent(() => {
+  const todoInput = Fluxel.input({ type: "text", placeholder: "New todo..." });
+
+  const dom = Fluxel.div([
+      todoInput,
+      Fluxel.button({
+          onclick: () => {
+              dom.appendChild(TodoItem({ text: todoInput.value.trim() }));
+              todoInput.value = ""; // Clear the input field.
+          },
+          children: "Add"
+      }),
+  ]);
+  return dom;
+});
+
+document.body.appendChild(TodoList());
+```
+
+<!--
+### Basic Functional API Example with Fluxel's Reactivity
+```ts
+
+```
+-->
 
 ### Basic JSX Example
 

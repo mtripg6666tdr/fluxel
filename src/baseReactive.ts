@@ -1,6 +1,6 @@
 import BaseFluxel from "./index.js";
 import ReactiveDependency from "./reactiveDependency.js";
-import type { ChildrenType, StateParam, ReactiveDependencyUse, MemoizeFunction, FluxelComponent } from "./type.js";
+import type { ChildrenType, StateParam, ReactiveDependencyUse, MemoizeFunction, FluxelComponent, TypedEventTarget, StateParamListenTargetEventType } from "./type.js";
 
 const Fluxel = BaseFluxel as typeof BaseFluxel & {
   reactive: <T extends object, R extends ChildrenType>(
@@ -19,6 +19,7 @@ Fluxel.reactive = function <T extends object, R extends ChildrenType>(
   const pureState = {
     ...initialState,
     render: <K extends keyof T>(targetProperty?: K) => {
+      pureState.listenTarget.dispatchEvent(new CustomEvent("render", { detail: { property: targetProperty } }) as any);
       if (targetProperty) {
         stateMap[targetProperty]?.listeners.forEach(listener => listener.call(null));
       } else {
@@ -140,7 +141,7 @@ Fluxel.reactive = function <T extends object, R extends ChildrenType>(
       dep.value; // Trigger the initial value to ensure the dependency is set up
       return [dep as ReactiveDependency<T[K]>, memo];
     },
-    listenTarget: new EventTarget(),
+    listenTarget: new EventTarget() as TypedEventTarget<StateParamListenTargetEventType<T>>,
   };
 
   const state: StateParam<T> = new Proxy(pureState, {
@@ -151,7 +152,7 @@ Fluxel.reactive = function <T extends object, R extends ChildrenType>(
 
       const oldValue = target[prop as keyof typeof target];
       target[prop as keyof typeof target] = value;
-      target.listenTarget.dispatchEvent(new CustomEvent(prop as string, { detail: { oldValue, newValue: value } }));
+      target.listenTarget.dispatchEvent(new CustomEvent(prop as string, { detail: { oldValue, newValue: value } }) as any);
       target.render(prop as keyof T);
       return true;
     }
