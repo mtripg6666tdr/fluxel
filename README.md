@@ -46,7 +46,7 @@ Fluxel is an ultra-lightweight and high-performance DOM-building library inspire
   - [`TextNode` Updates vs. `HTMLElement` Updates](#textnode-updates-vs-htmlelement-updates)
   - [Child Element Type Stability](#child-element-type-stability)
   - [Triggering Side Effects by Monitoring State Changes (`state.listenTarget`)](#triggering-side-effects-by-monitoring-state-changes-statelistentarget)
-  - [Expressing Reactive Elements Without Components (`Fluxel.reactive`)](#expressing-reactive-elements-without-components-fluxelreactive)
+  - [Expressing Reactive Elements without Components (`Fluxel.reactive`)](#expressing-reactive-elements-without-components-fluxelreactive)
   - [Memoization when using `ReactiveDependency` as `Props` (`state.useWithMemo`)](#memoization-when-using-reactivedependency-as-props-stateusewithmemo)
 - [Type Definitions](#type-definitions)
 - [Contributions](#contributions)
@@ -881,7 +881,7 @@ state.render('data');          // This WILL trigger a 'data' event.
                                //    only its internal content did, and state.render was used to signal this.)
 ```
 
-### Expressing Reactive Elements Without Components (`Fluxel.reactive`)
+### Expressing Reactive Elements without Components (`Fluxel.reactive`)
 
 Normally in Fluxel, to define reactive elements, you use the `Fluxel.createStatefulComponent` function.
 By using `Fluxel.reactive`, which is also an internal function, it's possible to introduce a reactive scope without creating a full component.

@@ -22,7 +22,7 @@ const result = await build({
   minify: true,
   target: ['chrome58', 'firefox57', 'safari11', 'edge16'],
   outdir: '.',
-  inject: ['./browser-inject.mjs'],
+  inject: ['./browserInject.mjs'],
   globalName: '__Fluxel_esm',
   metafile: true,
   banner: {
