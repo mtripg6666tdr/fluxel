@@ -5,6 +5,10 @@ const gzip = promisify(_gzip);
 
 const outJson = process.argv.includes("--json");
 
+const outMarkdown = process.argv.includes("--update-readme");
+
+let markdown = outMarkdown ? await fs.readFile("./README.md", "utf-8") : null;
+
 const files = await fs.readdir("./dist/browser");
 
 if(outJson){
@@ -17,6 +21,21 @@ await Promise.all(
       const filePath = `./dist/browser/${file}`;
       const data = await fs.readFile(filePath);
       const gzippedData = await gzip(data, { level: 9 });
+
+      if(outMarkdown){
+        const id = {
+          "fluxel.min.js": "CORE",
+          "fluxel-reactive.min.js": "RCORE",
+          "fluxel-jsx-runtime.min.js": "JSX",
+        }[file];
+        if(id){
+          markdown = markdown.replace(
+            new RegExp(`<!--${id}-->\\d\\.\\d+KB<!--${id}-->`),
+            `<!--${id}-->${(gzippedData.byteLength / 1024).toFixed(1)}KB<!--${id}-->`
+          )
+        }
+      }
+
       if(outJson){
         console.log(`  { "file": "${file}", "size": ${gzippedData.byteLength} }${file === files[files.length - 1] ? "" : ","}`);
       }else{
@@ -28,4 +47,9 @@ await Promise.all(
 
 if(outJson){
   console.log("]");
+}
+
+if(outMarkdown){
+  await fs.writeFile("./README.md", markdown);
+  console.log("Updated README.md with gzipped sizes.");
 }
