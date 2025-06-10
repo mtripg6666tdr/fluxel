@@ -2,7 +2,7 @@ import BaseFluxel from "../jsx-reactive/index.js";
 import { jsx, Fragment } from "../jsx-runtime/index.js";
 import type { ChildrenType, FluxelComponent, FluxelJSXElement } from "../type.js";
 
-const Fluxel = BaseFluxel as typeof BaseFluxel & {
+const Fluxel = BaseFluxel as unknown as typeof BaseFluxel & {
   jsx: {
     createElement: <P extends object>(
       type: string | FluxelComponent<any, ChildrenType>,
@@ -15,7 +15,7 @@ const Fluxel = BaseFluxel as typeof BaseFluxel & {
 
 Fluxel.jsx = {
   createElement(type, props, ...children) {
-    return jsx(type, { ...props, children: children.flat(Infinity) }, null);
+    return jsx(type, { ...props, children: children.flat(Infinity) }, null) as unknown as FluxelJSXElement;
   },
   Fragment,
 }

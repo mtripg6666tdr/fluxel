@@ -1,4 +1,4 @@
-// Importing the all HTML tag names as a string array from a generated file
+import { cleanupTargetListenerRecursive } from "./internalStore.js";
 import ReactiveDependency from "./reactiveDependency.js";
 import tags from "./tags__generated.js";
 import type { FluxelInternalOptions, ChildrenType, CanBeReactiveMap, CanBeReactive, FixedLengthChildrenType, FluxelInternalOptionsFromNode, HydrationMetadata } from "./type.js";
@@ -57,7 +57,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
       attributes = Object.assign(Object.create(null), options) as FluxelInternalOptions<K>;
 
       if ("textContent" in attributes) {
-        throw new TypeError("textContent is not allowed in createElement options, use children instead");
+        throw new TypeError("textContent is not allowed");
       }
 
       if ("children" in attributes && (attributes.children !== null && attributes.children !== undefined)) {
@@ -109,7 +109,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
     for (const key in styles) {
       if (styles[key] instanceof ReactiveDependency) {
         const dep = styles[key] as ReactiveDependency<any>;
-        dep.addDependency(() => {
+        dep.addDependency(element, () => {
           (element.style as any)[key] = dep.value;
         });
         styles[key] = dep.value;
@@ -136,7 +136,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
         cls.forEach(cls => addClass(cls));
       } else if (cls instanceof ReactiveDependency) {
         const dep = cls as ReactiveDependency<string | DOMTokenList | string[] | Set<string>>;
-        dep.addDependency(() => {
+        dep.addDependency(element, () => {
           element.classList.forEach(cls => element.classList.remove(cls));
           classList.clear();
           addClassList(dep.value);
@@ -154,8 +154,8 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
           set: () => {
             throw new TypeError("Cannot set value of classList directly");
           }
-        }, dep => {
-          attributesClassList.forEach(cls => cls instanceof ReactiveDependency && cls.addDependency(() => dep));
+        }, (targetObj, dep) => {
+          attributesClassList.forEach(cls => cls instanceof ReactiveDependency && cls.addDependency(targetObj, () => dep));
         })
       : attributes.classList as CanBeReactive<string | DOMTokenList | (string | false | null | undefined)[] | Set<string | false | null | undefined>>;
 
@@ -174,7 +174,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
     for (const key in datasets) {
       if (datasets[key] instanceof ReactiveDependency) {
         const dep = datasets[key] as ReactiveDependency<any>;
-        dep.addDependency(() => {
+        dep.addDependency(element, () => {
           element.dataset[key] = dep.value;
         });
         datasets[key] = dep.value;
@@ -188,7 +188,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
   for (const key in attributes) {
     if (attributes[key as keyof typeof attributes] instanceof ReactiveDependency) {
       const dep = attributes[key as keyof typeof attributes] as ReactiveDependency<any>;
-      dep.addDependency(() => {
+      dep.addDependency(element, () => {
         (element as any)[key] = dep.value;
       });
       if(!isHydrating){
@@ -215,51 +215,59 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
   }
 
   if (variableChildrenLength && originalChildren) {
-    (originalChildren as unknown as ReactiveDependency<FixedLengthChildrenType[]>).addDependency(() => {
+    (originalChildren as unknown as ReactiveDependency<FixedLengthChildrenType[]>).addDependency(element, () => {
       const currentChildren = spreadHTMLCollection(element.childNodes);
       const newChildren = normalizeChildren(originalChildren).children;
+      const currentChildrenMap = arrayToMap(currentChildren);
+      const newChildrenMap = arrayToMap(newChildren);
 
-      if(newChildren.length < currentChildren.length) {
-        // removed some children
-        if(newChildren.every((child, index) => currentChildren[index]?.isSameNode(child))) {
-          // if the new children are the same as the first n children, we can just remove the rest
-          for (let i = newChildren.length; i < currentChildren.length; i++) {
-            element.removeChild(currentChildren[i]);
+      if (currentChildren.length === newChildren.length && currentChildren.every((child, index) => child.isSameNode(newChildren[index]))) {
+        return; // No changes needed
+      }
+
+      const mostEfficientFixedElementIndex = currentChildren.reduce((prev, current, index) => {
+        const newChildrenAtIndex = newChildrenMap.get(current) ?? -1;
+        if (newChildrenAtIndex < 0) return prev;
+        let reusable = new Set<number>([index]);
+        let currentPointer = index;
+        for (let i = newChildrenAtIndex + 1; i < newChildren.length; i++) {
+          const currentChildrenAtIndex = currentChildrenMap.get(newChildren[i]) ?? -1;
+          if (currentChildrenAtIndex < currentPointer) {
+            continue;
           }
-          return;
-        }else if(newChildren.every((child, index) => currentChildren[currentChildren.length - newChildren.length + index]?.isSameNode(child))) {
-          // if the new children are the same as the last n children, we can just remove the rest
-          for (let i = 0; i < currentChildren.length - newChildren.length; i++) {
-            element.removeChild(currentChildren[i]);
-          }
-          return;
+          reusable.add(currentChildrenAtIndex);
+          currentPointer = currentChildrenAtIndex;
         }
-      }else if(newChildren.length > currentChildren.length) {
-        // added some children
-        if(newChildren.slice(0, currentChildren.length).every((child, index) => currentChildren[index]?.isSameNode(child))) {
-          // if the new children are the same as the first n children, we can just append the rest
-          element.append(...newChildren.slice(currentChildren.length));
-          return;
-        }else if(newChildren.slice(newChildren.length - currentChildren.length).every((child, index) => currentChildren[currentChildren.length - newChildren.length + index]?.isSameNode(child))) {
-          // if the new children are the same as the last n children, we can just append the rest
-          element.prepend(...newChildren.slice(0, newChildren.length - currentChildren.length));
-          return;
+        if (reusable.size > prev.size) {
+          return reusable;
+        }
+        return prev;
+      }, new Set<number>());
+
+      const deleteElements = new Set<Node>();
+
+      if (mostEfficientFixedElementIndex.size !== currentChildren.length) {
+        for (let i = currentChildren.length - 1; i >= 0; i--) {
+          if (!mostEfficientFixedElementIndex.has(i)) {
+            const deleteElement = currentChildren[i];
+            element.removeChild(deleteElement);
+            deleteElements.add(deleteElement);
+          }
         }
       }
 
-      // if we reach here, we need to replace all children (or append if there are no current children)
+      if(element.childNodes.length === newChildren.length) return;
+
       newChildren.forEach((newChild, index) => {
-        while(element.childNodes[index] && !element.childNodes[index].isSameNode(newChild)) {
-          element.removeChild(element.childNodes[index]);
-        }
-      });
-      newChildren.forEach((newChild, index) => {
-        if(index >= element.childNodes.length) {
+        deleteElements.delete(newChild);
+        if (!element.childNodes[index]) {
           element.appendChild(newChild);
-        } else if(!element.childNodes[index].isSameNode(newChild)) {
+        } else if (element.childNodes[index] !== newChild) {
           element.insertBefore(newChild, element.childNodes[index]);
         }
       });
+
+      deleteElements.forEach(element => cleanupTargetListenerRecursive(element as HTMLElement | Text));
     });
   } else if (reactiveIndex && reactiveIndex.length > 0 && originalChildren) {
     for (const index of reactiveIndex) {
@@ -269,24 +277,33 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
           : (originalChildren as any)[index]
       ) as ReactiveDependency<Node>;
       if (originalChild instanceof ReactiveDependency) {
-        originalChild.addDependency(() => {
+        originalChild.addDependency(element, () => {
           const newChild = normalizeChildren(originalChild.value).children[0];
           const oldChild = element.childNodes[index];
-          if (oldChild && oldChild.isSameNode(newChild)) return;
+          if (oldChild === newChild) return;
           element.replaceChild(newChild, oldChild);
+          cleanupTargetListenerRecursive(oldChild as HTMLElement);
         });
         children![index] = originalChild.value;
       }
     }
   }
 
-  if (children && !isHydrating) {
-    element.append(...children);
+  if (children) {
+    if (isHydrating) {
+      children.forEach((child, index) => {
+        if(child instanceof Text) {
+          element.replaceChild(child, element.childNodes[index]!);
+        }
+      });
+    } else {
+      element.append(...children);
+    }
   }
 
   eventHandlers.forEach((handlers, eventName) => {
     handlers.forEach(handler => {
-      element.addEventListener(eventName, handler as EventListener, { passive: true });
+      element.addEventListener(eventName, handler as EventListener);
     });
   });
 
@@ -330,8 +347,8 @@ function normalizeChildren(children: ChildrenType): { children: Node[], variable
 
         return [evaluatedChildrenValue];
       } else {
-        const textNode = window.document.createTextNode(evaluatedChildrenValue);
-        children.addDependency(() => {
+        const textNode = document.createTextNode(evaluatedChildrenValue);
+        children.addDependency(textNode, () => {
           textNode.textContent = String((children as ReactiveDependency<any>).value);
         });
         return [textNode];
@@ -405,6 +422,14 @@ function spreadHTMLCollection(collection: HTMLCollection | NodeListOf<ChildNode>
     result.push(collection[i]);
   }
   return result;
+}
+
+function arrayToMap<T>(array: T[]): Map<T, number> {
+  const map = new Map<T, number>();
+  array.forEach((item, index) => {
+    map.set(item, index);
+  });
+  return map;
 }
 
 fluxelInternal.useUniqueString = function <T extends ChildrenType>(renderer: (id: string) => T): T {

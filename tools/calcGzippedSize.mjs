@@ -27,6 +27,8 @@ await Promise.all(
           "fluxel.min.js": "CORE",
           "fluxel-reactive.min.js": "RCORE",
           "fluxel-jsx-runtime.min.js": "JSX",
+          "fluxel-reactive-router.min.js": "ROUTER",
+          "fluxel-jsx-reactive-router.min.js": "JROUTER",
         }[file];
         if(id){
           markdown = markdown.replace(

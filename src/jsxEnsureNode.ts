@@ -1,6 +1,6 @@
-import { FluxelJSXElement } from "./type.js";
+import type { FluxelJSXElement } from "./type.js";
 
-export default function ensureNode(child: FluxelJSXElement): Node {
+export default function ensureNode(child: Node | FluxelJSXElement): Node {
   if(child instanceof Node){
     return child;
   }

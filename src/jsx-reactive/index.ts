@@ -13,16 +13,16 @@ const Fluxel = BaseFluxel as unknown as Omit<typeof BaseFluxel, "createComponent
 };
 
 Fluxel.createStatefulComponent = function <P extends object, S extends object>(
-  renderer: (props: P, state: StateParam<S>) => FluxelJSXElement,
+  renderer: (props: P, state: StateParam<S>) => ChildrenType | FluxelJSXElement,
   initialState?: S | ((props: P) => S),
 ) {
   return (props: P = {} as P): FluxelJSXElement => {
-    return Fluxel.reactive(
+    return Fluxel.reactive<S, FluxelJSXElement>(
       typeof initialState === "function" ? initialState(props) : (initialState || {} as S),
       state => {
-        return renderer(props, state) as unknown as ChildrenType;
+        return renderer(props, state) as unknown as FluxelJSXElement;
       }
-    ) as unknown as FluxelJSXElement;
+    );
   }
 }
 

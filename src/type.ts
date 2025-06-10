@@ -18,11 +18,13 @@ export type ChildrenType<T extends Node = Node> =
   | ReactiveDependency<T[]>
   | ReactiveDependency<(string | T)[]>;
 export type FixedLengthChildrenType<T extends Node = Node> =
+  | SingleChildType<T>
+  | (string | T | ReactiveDependency<string> | ReactiveDependency<T>)[];
+export type SingleChildType<T extends Node = Node> =
   | string
   | T
   | ReactiveDependency<string>
-  | ReactiveDependency<T>
-  | (string | T | ReactiveDependency<string> | ReactiveDependency<T>)[];
+  | ReactiveDependency<T>;
 
 export type CanBeReactiveMap<T> = { [key in keyof T]: CanBeReactive<T[key]> };
 export type CanBeReactive<T> = T | ReactiveDependency<T>;
@@ -45,7 +47,7 @@ export type FluxelInternalOptionsFromNode<K extends Node, C = ChildrenType> =
   };
 
 export type StateParamListenTargetEventType<T extends object> = {
-  [key in keyof T]: { oldValue?: Readonly<T[key]>, newValue: Readonly<T[key]> }
+  [key in keyof T]: CustomEvent<{ oldValue?: Readonly<T[key]>, newValue: Readonly<T[key]> }>
 };
 
 export type StateParam<T extends object> = T & {
@@ -68,15 +70,18 @@ export interface ReactiveDependencyUse<T extends object> {
 
 export type FluxelComponent<P extends object, R extends ChildrenType | FluxelJSXElement> = (props?: P) => R;
 
-export declare class FluxelJSXElement {}
+declare const FluxelJSXElementSymbol: unique symbol;
+export declare class FluxelJSXElement {
+  [FluxelJSXElementSymbol]: true;
+}
 
 export type HydrationMetadata = {
   getElementByEid(eid: string): HTMLElement,
   count: number,
 };
 
-export declare class TypedEventTarget<T> {
-  addEventListener<K extends keyof T>(type: K, listener: (this: TypedEventTarget<T>, ev: CustomEvent<T[K]>) => any, options?: boolean | AddEventListenerOptions): void;
-  removeEventListener<K extends keyof T>(type: K, listener: (this: TypedEventTarget<T>, ev: CustomEvent<T[K]>) => any, options?: boolean | EventListenerOptions): void;
-  dispatchEvent<K extends keyof T>(event: CustomEvent<T[K]>): boolean;
+export declare class TypedEventTarget<T extends Record<string, Event>> {
+  addEventListener<K extends keyof T>(type: K, listener: (this: TypedEventTarget<T>, ev: T[K]) => any, options?: boolean | AddEventListenerOptions): void;
+  removeEventListener<K extends keyof T>(type: K, listener: (this: TypedEventTarget<T>, ev: T[K]) => any, options?: boolean | EventListenerOptions): void;
+  dispatchEvent<K extends keyof T>(event: T[K]): boolean;
 }

@@ -26,7 +26,7 @@ const commonBuildOptions = {
   format: 'iife',
   bundle: true,
   minify: true,
-  target: ['chrome58', 'firefox57', 'safari11', 'edge16'],
+  target: ['chrome64', 'firefox78', 'safari11', 'edge79'],
   metafile: true,
   outdir: '.',
 };
@@ -67,6 +67,22 @@ const buildConfigs = [
     inject: ['./tools/injects/hFactoryBrowserInject.mjs'],
     globalName: '__HFactory_esm',
     banner: banner('h-factory'),
+  },
+  {
+    entryPoints: [{
+      in: './dist/esm/reactive-router/index.js',
+      out: './dist/browser/fluxel-reactive-router.min',
+    }],
+    globalName: 'FluxelRouter',
+    banner: banner('router'),
+  },
+  {
+    entryPoints: [{
+      in: './dist/esm/jsx-reactive-router/entryForSizeCalc.js',
+      out: './dist/browser/fluxel-jsx-reactive-router.min',
+    }],
+    globalName: 'FluxelJSXRouter',
+    banner: banner('jsx-reactive-router'),
   },
 ]
 

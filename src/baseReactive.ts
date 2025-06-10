@@ -1,20 +1,23 @@
 import BaseFluxel from "./index.js";
+import { targetListenerMap } from "./internalStore.js";
 import ReactiveDependency from "./reactiveDependency.js";
-import type { ChildrenType, StateParam, ReactiveDependencyUse, MemoizeFunction, FluxelComponent, TypedEventTarget, StateParamListenTargetEventType } from "./type.js";
+import type { ChildrenType, StateParam, ReactiveDependencyUse, MemoizeFunction, TypedEventTarget, StateParamListenTargetEventType, FluxelJSXElement, CanBeReactive } from "./type.js";
 
 const Fluxel = BaseFluxel as typeof BaseFluxel & {
-  reactive: <T extends object, R extends ChildrenType>(
+  reactive: <T extends object, R extends CanBeReactive<ChildrenType | FluxelJSXElement>>(
     initialState: T,
     renderer: (stateParam: StateParam<T>) => R,
   ) => R;
   schedule: (fn: () => void) => void;
 };
 
-Fluxel.reactive = function <T extends object, R extends ChildrenType>(
+export const pureStateReservedKeys = ["render", "use", "useWithMemo", "listenTarget"] as const;
+
+Fluxel.reactive = function <T extends object, R extends CanBeReactive<ChildrenType | FluxelJSXElement>>(
   initialState: T,
   renderer: (stateParam: StateParam<T>) => R,
 ): R {
-  const stateMap = Object.create(null) as { [key in keyof T]: { dep: ReactiveDependency<T[key]>, listeners: (() => void)[] } };
+  const stateListenerMap = Object.create(null) as { [key in keyof T]: { dep: ReactiveDependency<T[key]>, listeners: (() => void)[] } };
 
   const pureState = {
     ...initialState,
@@ -24,10 +27,10 @@ Fluxel.reactive = function <T extends object, R extends ChildrenType>(
       }
 
       if (targetProperty) {
-        stateMap[targetProperty]?.listeners.forEach(listener => listener.call(null));
+        stateListenerMap[targetProperty]?.listeners.forEach(listener => listener.call(null));
       } else {
-        for (const key in stateMap) {
-          stateMap[key].listeners.forEach(listener => listener.call(null));
+        for (const key in stateListenerMap) {
+          stateListenerMap[key].listeners.forEach(listener => listener.call(null));
         }
       }
     },
@@ -78,7 +81,7 @@ Fluxel.reactive = function <T extends object, R extends ChildrenType>(
         usedPureMemos = new Map();
         const derived = deriveFn(v, memoize);
         if(usedMemoCount !== -1 && usedMemoCount !== memoIndex) {
-          throw new TypeError("Memoization count mismatch, ensure memoization is used correctly");
+          throw new TypeError("Memoization count mismatch");
         }
         pureMemos = usedPureMemos;
         return derived;
@@ -89,9 +92,9 @@ Fluxel.reactive = function <T extends object, R extends ChildrenType>(
         return new ReactiveDependency({
           get: () => Object.fromEntries(entries.map((entry) => [entry[0], entry[1].value])),
           set: (_) => {
-            throw new TypeError("Cannot set value of multiple dependencies at once");
+            throw new TypeError("Invalid");
           }
-        }, (dep) => {
+        }, (targetObj, dep) => {
           let depCallPending = false;
           // Throttle the dependency calls to avoid too many updates in a single render cycle
           const throttleDep = () => {
@@ -103,12 +106,12 @@ Fluxel.reactive = function <T extends object, R extends ChildrenType>(
               dep();
             }, 0);
           };
-          entries.forEach((entry) => entry[1].addDependency(throttleDep));
+          entries.forEach((entry) => entry[1].addDependency(targetObj, throttleDep));
         }).derive(memorableDeriveFn!) as ReactiveDependency<R>;
       } else {
         let dep: ReactiveDependency<T[K]> | undefined;
-        if (stateMap[key as keyof typeof stateMap]) {
-          dep = stateMap[key as keyof typeof stateMap].dep as unknown as ReactiveDependency<T[K]>;
+        if (stateListenerMap[key as keyof typeof stateListenerMap]) {
+          dep = stateListenerMap[key as keyof typeof stateListenerMap].dep as unknown as ReactiveDependency<T[K]>;
         } else if (pureState[key] instanceof ReactiveDependency) {
           dep = pureState[key] as ReactiveDependency<T[K]>;
         } else {
@@ -119,13 +122,21 @@ Fluxel.reactive = function <T extends object, R extends ChildrenType>(
                 pureState[key] = val;
               }
             },
-            function addDependency(dep) {
-              if (!stateMap[key].listeners.includes(dep)) {
-                stateMap[key].listeners.push(dep);
+            function addDependency(targetObj, dep) {
+              if (!stateListenerMap[key].listeners.includes(dep)) {
+                stateListenerMap[key].listeners.push(dep);
+                const cleanupDep = () => {
+                  stateListenerMap[key].listeners = stateListenerMap[key].listeners.filter(listener => listener !== dep);
+                };
+                if (targetListenerMap.has(targetObj)) {
+                  targetListenerMap.get(targetObj)!.add(cleanupDep);
+                } else {
+                  targetListenerMap.set(targetObj, new Set([cleanupDep]));
+                }
               }
             }
           ) as ReactiveDependency<T[K]>;
-          stateMap[key as keyof typeof stateMap] = { dep, listeners: [] } as any;
+          stateListenerMap[key as keyof typeof stateListenerMap] = { dep, listeners: [] } as any;
         }
 
         if (memorableDeriveFn) {
@@ -149,11 +160,16 @@ Fluxel.reactive = function <T extends object, R extends ChildrenType>(
 
   const state: StateParam<T> = new Proxy(pureState, {
     set(target, prop, value) {
-      if (prop === "render") {
-        throw new TypeError("Cannot set 'render' property");
+      if (pureStateReservedKeys.includes(prop as any)) {
+        throw new TypeError(`Cannot set the specified property: ${String(prop)}`);
       }
 
       const oldValue = target[prop as keyof typeof target];
+
+      if(oldValue === value) {
+        return true; // No change, no need to update
+      }
+
       target[prop as keyof typeof target] = value;
       target.listenTarget.dispatchEvent(new CustomEvent(prop as string, { detail: { oldValue, newValue: value } }) as any);
       target.render(prop as keyof T);

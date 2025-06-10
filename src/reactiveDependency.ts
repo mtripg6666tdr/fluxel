@@ -7,7 +7,7 @@ export default class ReactiveDependency<T> {
     this._accessor.set(val);
   }
 
-  constructor(private _accessor: { get: () => T, set: (val: T) => void }, public addDependency: (dep: (() => void)) => void) { }
+  constructor(private _accessor: { get: () => T, set: (val: T) => void }, public addDependency: (targetObj: Text | HTMLElement, dep: (() => void)) => void) { }
 
   derive<U>(fn: (value: T) => U): ReactiveDependency<U> {
     const derivedAccessor = {

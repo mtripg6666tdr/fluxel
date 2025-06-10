@@ -7,6 +7,11 @@ function jsx(
   props: Record<string, any> | null,
   _key?: string | number | null | undefined,
 ): ChildrenType {
+  if(props?.className){
+    props.classList ??= [];
+    props.classList.push(props.className.split(" ").filter(Boolean));
+    delete props.className;
+  }
   if(typeof type === "string") {
     return Fluxel.createElement(type as any, props as any);
   }else{

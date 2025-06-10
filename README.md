@@ -1,21 +1,9 @@
 # Fluxel - Tiny, Fast, and Delightful DOM Building Library
-
-Fluxel is an ultra-lightweight and high-performance DOM-building library inspired by the simplicity of React's JSX and the DOM API. It enables the creation of reactive UIs, offers strong type safety via TypeScript, and provides a pleasant developer and user experience—all with a surprisingly small footprint.
-
-## Features
-
-* 💡 **Intuitive API (Functional & JSX)**: You can create elements using tag-based functions like `Fluxel.div()` and `Fluxel.span()`. For those who prefer declarative code, Fluxel also supports optional React-like JSX syntax (`<div />`). Both styles allow for efficient UI building.
-* ⚡ **High-Performance DOM Updates / Reactive System**: Fluxel features a state-driven reactivity system that automatically updates the UI when the state changes. Without relying on a virtual DOM, it updates only the specific DOM nodes linked to the changed state, achieving exceptional performance.
-* 🧩 **`Fluxel.fragment`**: A utility that allows grouping multiple children without introducing unnecessary wrapper elements in the DOM. It can intelligently propagate attributes (especially `classList` and event handlers) to its children.
-* 🏗️ **`Fluxel.createComponent` / `Fluxel.createStatefulComponent`**: Lightweight abstractions for defining reusable UI components. You can clearly define both stateless and reactive components.
-* 🍃 **Ultra-Compact & Build-Free Modular Design**: Fluxel boasts an incredibly tiny footprint, achieved through its zero-dependency and modular design. It's engineered to be ultra-compact at runtime. You can selectively import features to keep your app lean:
-  * **Core**: around **<!--CORE-->3.0KB<!--CORE-->** (gzipped)
-  * **Reactive Core**: around **<!--RCORE-->3.8KB<!--RCORE-->** (gzipped)
-  * **Reactive Core with JSX Support**: around **<!--JSX-->3.9KB<!--JSX-->** (gzipped)
+Fluxel is an ultra-lightweight and high-performance DOM-building library inspired by the simplicity of React's JSX and the DOM API. It enables the dynamic building of static and/or reactive UIs, offers strong type safety via TypeScript, and provides a pleasant developer and user experience—all with a surprisingly small footprint.
 
 ## Table of Contents
-- [Features](#features)
 - [Table of Contents](#table-of-contents)
+- [Features](#features)
 - [Installation](#installation)
   - [Importing](#importing)
   - [JSX Setup](#jsx-setup)
@@ -39,6 +27,14 @@ Fluxel is an ultra-lightweight and high-performance DOM-building library inspire
     - [Memoization within Components](#memoization-within-components)
   - [Creating an unique identifier (`Fluxel.useUniqueString`)](#creating-an-unique-identifier-fluxeluseuniquestring)
   - [Component-Bound Static Style Injection (`Fluxel.forwardStyle`)](#component-bound-static-style-injection-fluxelforwardstyle)
+  - [Using Client-side Router](#using-client-side-router)
+    - [Minimal Example](#minimal-example)
+    - [Import Style](#import-style)
+    - [Route Definition](#route-definition)
+    - [Get Route Information (`useRouter`)](#get-route-information-userouter)
+    - [Navigation](#navigation)
+    - [Asynchronous Routes and Loading States](#asynchronous-routes-and-loading-states)
+    - [Error Handling and `useRouter` Options](#error-handling-and-userouter-options)
   - [Server-Side Rendering (SSR) and Hydration](#server-side-rendering-ssr-and-hydration)
     - [`renderToString` Function](#rendertostring-function)
     - [`hydrate` Function](#hydrate-function)
@@ -56,6 +52,20 @@ Fluxel is an ultra-lightweight and high-performance DOM-building library inspire
 - [Contributions](#contributions)
 - [License](#license)
 
+## Features
+
+* 💡 **Intuitive API (Functional & JSX)**: You can create elements using tag-based functions like `Fluxel.div()` and `Fluxel.span()`. For those who prefer declarative code, Fluxel also supports optional React-like JSX syntax (`<div />`). Both styles allow for efficient UI building.
+* ⚡ **High-Performance DOM Updates / Reactive System**: Fluxel features a state-driven reactivity system that automatically updates the UI when the state changes. Without relying on a virtual DOM, it updates only the specific DOM nodes linked to the changed state, achieving exceptional performance.
+* 🧭 **Integrated Client-Side Router**: Fluxel comes with a powerful, built-in client-side router that enables seamless navigation within your single-page applications. It supports dynamic routes, nested routing, and efficient view updates without full page reloads, ensuring a smooth user experience. Besides, all can be done without compilation, significantly simplifying the development process.
+* 🧩 **`Fluxel.fragment`**: A utility that allows grouping multiple children without introducing unnecessary wrapper elements in the DOM. It can intelligently propagate attributes (especially `classList` and event handlers) to its children.
+* 🏗️ **`Fluxel.createComponent` / `Fluxel.createStatefulComponent`**: Lightweight abstractions for defining reusable UI components. You can clearly define both stateless and reactive components.
+* 🍃 **Ultra-Compact & Build-Free Modular Design**: Fluxel boasts an incredibly tiny footprint, achieved through its zero-dependency and modular design. It's engineered to be ultra-compact at runtime. You can selectively import features to keep your app lean:
+  * **Core**: around **<!--CORE-->3.1KB<!--CORE-->** (gzipped)
+  * **Reactive Core**: around **<!--RCORE-->4.2KB<!--RCORE-->** (gzipped)
+  * **Reactive Core with JSX Support**: around **<!--JSX-->4.3KB<!--JSX-->** (gzipped)
+  * **Reactive Core with Router**: around **<!--ROUTER-->5.3KB<!--ROUTER-->** (gzipped)
+  * **Reactive Core with JSX and Router**: around **<!--JROUTER-->5.5KB<!--JROUTER-->** (gzipped)
+
 ## Installation
 
 ```sh
@@ -69,13 +79,14 @@ yarn add fluxel
 Once installed, you can import Fluxel and start using it immediately.
 Fluxel provides multiple import modules based on your needs:
 
-|                    |   Functional API  |       JSX Syntax      |
-| :----------------: | :---------------: | :-------------------: |
-| Without Reactivity |      `fluxel`     |           -           |
-|   With Reactivity  | `fluxel/reactive` | `fluxel/jsx-reactive` |
+|                                    | Without Reactivity | With Reactivity              | With Reactivity and Router   |
+| :--------------------------------: | :----------------: | :--------------------------: | :--------------------------: |
+| **Functional API**                 |      `fluxel`      | `fluxel/reactive`            |  `fluxel/reactive-router`    |
+| **JSX Syntax (New JSX Transform)** |         -          | `fluxel/jsx-reactive`        | `fluxel/jsx-reactive-router` |
+| **JSX Syntax (Old JSX Transform)** |         -          | `fluxel/jsx-reactive-legacy` |             -                |
 
 All APIs available in `fluxel` are also available in the other modules.
-Likewise, everything in `fluxel/reactive` is also accessible from `fluxel/jsx-reactive`.
+You can choose and import just one of these.
 
 Fluxel supports both CommonJS and ESModules. If using CommonJS, note that the `default` property corresponds to the default export of ESModules:
 
@@ -129,8 +140,13 @@ Instead of installing via package managers like npm, you can load it directly in
   <script src="https://cdn.jsdelivr.net/npm/fluxel@x.x/dist/browser/fluxel-reactive.min.js"></script>
   ```
 
+* If reactivity and the router feature are required, paste the following into your `<head>`:
+  ```html
+  <script src="https://cdn.jsdelivr.net/npm/fluxel@x.x/dist/browser/fluxel-reactive-router.min.js"></script>
+  ```
+
 * If you plan to use [htm](https://npmjs.com/package/htm) or similar libraries for JSX-like syntax without a build step,
-  include the following in your `<head>` to load the Hyperscript-compatible h function factory.
+  include the following together with one of above tags in your `<head>` to load the Hyperscript-compatible h function factory.
   ```html
   <script src="https://cdn.jsdelivr.net/npm/fluxel@x.x/dist/browser/fluxel-h.min.js"></script>
   ```
@@ -145,6 +161,11 @@ For ES Modules usage, you can import Fluxel directly from [esm.run](https://www.
 * If reactivity is required:
   ```js
   import Fluxel from 'https://esm.run/fluxel@x.x/reactive';
+  ```
+
+* If reactivity and the router feature are required:
+  ```js
+  import Fluxel from 'https://esm.run/fluxel@x.x/reactive-router';
   ```
 
 * If you need the the Hyperscript-compatible h function factory for [htm](https://npmjs.com/package/htm) or similar libraries:
@@ -637,6 +658,179 @@ const MyButtonComponent = Fluxel.createComponent(() => {
 * **No Scoping**: Styles inserted by forwardStyle are applied globally to the entire document. There is no automatic mechanism for scoping styles to specific component instances or elements. Developers should manage potential style conflicts manually.  
 * **Not for Unique Dynamic Styles**: This function is generally not recommended for scenarios requiring the generation of unique class names for every component instance or highly dynamic, instance-specific styling that needs to be scoped or removed. This is because once CSS is added, it cannot be deleted, leading to an accumulation of style definitions. Its primary use case is for applying a fixed set of styles that are common to a component or a specific part of the application upon its initial rendering.
 
+### Using Client-side Router
+
+Fluxel includes a powerful and flexible client-side router, perfect for building Single-Page Applications (SPAs) that offer a smooth and responsive user experience.
+
+* **Flexible Routing Modes**: Supports both clean URL (`history` API) and hash-based (`#`) routing, giving you control over your application's URL structure.
+* **Dynamic & Nested Routes**: Easily define routes with dynamic parameters (e.g., `/users/:id` or optional segments like `/blog/:year?/`) and capture them using intuitive named groups for direct access in your components.
+* **Reactive Query Parameters**: Query parameters (`?key=value`) are automatically reactive. When these parameters change, your components can efficiently respond to the URL updates without a full page reload, ensuring a highly dynamic UI.
+* **Asynchronous Route Loading & Smooth Transitions**: Seamlessly handles asynchronous components (e.g., for code splitting and lazy loading). Besides, a built-in `deferUpdate` mechanism intelligently defers UI updates until new route components are fully loaded, preventing content flickering or temporary empty states and ensuring a smooth user experience.
+* **Integrated Fallback**: Provides a graceful fallback component for unmatched routes, ensuring that users always see meaningful content, even when navigating to non-existent paths.
+
+#### Minimal Example
+
+Here's a minimal example demonstrating how to set up and use the Fluxel router with basic routes, navigation, and parameter/query access.
+
+```js
+import Fluxel, { createRouter, useRouter } from 'fluxel/reactive-router';
+
+// 1. Define Route Components
+const HomePage = Fluxel.createComponent(() => Fluxel.div({
+  children: [
+    Fluxel.h1('Home Page'),
+    Fluxel.p('Welcome to the Fluxel Router Example!'),
+  ]
+}));
+
+const AboutPage = Fluxel.createComponent(() => Fluxel.div({
+  children: [
+    Fluxel.h1('About Us'),
+    Fluxel.p('Learn more about Fluxel.'),
+  ]
+}));
+
+const UserProfilePage = Fluxel.createComponent(() => {
+  // 2. Use useRouter to get the current router state (path, parameters, query)
+  const router = useRouter();
+
+  const userId = router.params.id; // params is a pure object with path parameters
+  const userName = router.query.use("name", name => name || 'Guest'); // // query is a reactive state object
+
+  return Fluxel.div({
+    children: [
+      Fluxel.h1(`User Profile: ${userId}`),
+      Fluxel.p(userName.derive(name => `Hello, ${name}!`)),
+      // Example of links to change query parameters
+      Fluxel.Link({ href: `/users/${userId}?name=Jane`, children: 'Change name to Jane' }),
+      Fluxel.br(),
+      Fluxel.Link({ href: `/users/${userId}?name=John`, children: 'Change name to John' })
+    ]
+  });
+});
+
+const NotFoundPage = Fluxel.createComponent(() => Fluxel.div({ children: [
+  Fluxel.h1('404 - Page Not Found'),
+  Fluxel.p('The page you are looking for could not be found.'),
+]}));
+
+// 3. Define Route Configuration
+const router = createRouter({
+  '/': HomePage,
+  '/about': AboutPage,
+  '/users/:id': UserProfilePage,
+  '/*': NotFoundPage, // Fallback for unmatched routes
+});
+
+// 4. Main Application Component
+const App = Fluxel.createComponent(() => {
+  // Navigation Bar (static content, NOT inside the router's dynamic area)
+  const Navbar = Fluxel.div({
+    classList: ['p-4', 'bg-blue-600', 'text-white'],
+    children: Fluxel.ul({
+      classList: ['flex', 'space-x-4'],
+      children: [
+        Fluxel.li(Fluxel.Link({ href: '/', children: 'Home' })),
+        Fluxel.li(Fluxel.Link({ href: '/about', children: 'About' })),
+        Fluxel.li(Fluxel.Link({ href: '/users/123?name=Alice', children: 'User 123 (Alice)' })),
+        Fluxel.li(Fluxel.a({ href: '/non-existent', children: 'Non-existent Page' })) // For 404 testing
+      ],
+    })
+  });
+
+  return Fluxel.div({
+    // Main container for the entire application layout
+    classList: ['min-h-screen', 'flex', 'flex-col'],
+    children: [
+      Navbar, // Place the static navigation bar here
+      // The router's dynamic content area (the Outlet)
+      // The Provider component itself will manage rendering the matched route component
+      Fluxel.div({
+        classList: ['p-4', 'flex-grow'], // Use flex-grow to take available vertical space
+        children: router.Provider(), // Call Provider without explicit children for route content
+      }),
+    ]
+  });
+});
+
+// Render the application to the DOM
+document.body.appendChild(App());
+```
+
+#### Import Style
+
+The `createRouter` and `useRouter` functions, as well as the `Link` component, can be accessed in two convenient ways:
+
+1.  **Via `Fluxel` object**:
+    * `Fluxel.createRouter(...)`
+    * `Fluxel.useRouter()`
+    * `Fluxel.Link(...)`
+
+2.  **Via named imports**:
+    * `import { createRouter, useRouter, Link } from 'fluxel/reactive-router';` (or `fluxel/jsx-reactive-router`)
+
+Choose the import style that best suits your project's coding conventions and readability preferences. Both methods provide access to the same powerful router functionalities.
+
+#### Route Definition
+  * **Dynamic Segments**: Define dynamic parts of your path using a colon (e.g., `/users/:id`).
+  * **Optional Segments**: Make path segments optional by adding a question mark (e.g., `/blog/:year?/`).
+  * **Catch-all Routes**: Use `'/*'` (e.g., `createRouter({ '/*': NotFoundPage })`) to define a fallback route that matches any path not explicitly defined, useful for handling 404 pages.
+
+#### Get Route Information (`useRouter`)
+  * **`router.route`**: The matched route pattern string (e.g., `/users/:id`). This can be useful for debugging or for conditional logic based on the route pattern itself, not just the rendered component.
+  * **`router.pathname`**: The current pathname of URL (e.g., `/users/123`). Useful for logging or displaying the exact path. (Query parameter will not be included.)
+  * **`router.params` (Non-Reactive)**: This is a plain JavaScript object holding path parameters extracted from your route pattern (e.g., `id` from `/users/:id`). These values are typically static for a given route match and do not react to changes.
+  * **`router.query` (Reactive `StateParam` Object)**: This is a reactive `StateParam` object that manages URL query parameters (e.g., `?name=Alice`). Since query parameters can change dynamically, you should use `router.query.use()` or `.derive()` to access and react to their values. Changes to query parameters will automatically trigger UI updates.
+
+#### Navigation
+  * **`Fluxel.Link` Component**: Use this for declarative navigation. It behaves like a standard `<a>` tag, accepting an `href` attribute. Clicks are automatically intercepted to provide smooth SPA transitions.
+  * **Programmatic Navigation (`router.navigate` or `globalNavigate`)**: For navigation triggered by events like form submissions or API responses, you can use `router.navigate(path, options)`. This method automatically respects the configured `basePath` and `mode` (history or hash).
+      * `options.replace: true` can be passed to replace the current history entry, preventing the user from navigating back to the previous page.
+      * `globalNavigate(path, options)` is a lower-level function that applies the `path` directly to the browser's URL without considering the router's `mode` or `basePath`. `router.navigate` internally uses `globalNavigate` after adjusting the path based on the router's configuration (e.g., adding `#` for hash mode). Use `router.navigate` for most cases to ensure consistency with your router's configuration.
+
+#### Asynchronous Routes and Loading States
+
+Fluxel's router fully supports asynchronous route components, enabling powerful code splitting and lazy loading for optimized application performance.
+
+* **Defining Asynchronous Routes**: Your route configuration can point to components that are loaded asynchronously. This is done by having the route function return a `Promise` that resolves to the actual component.
+
+    ```tsx
+    const LazyLoadedComponent = Fluxel.createComponent(() => Fluxel.div('This is a lazy-loaded component!'));
+
+    const router = createRouter({
+      '/lazy': () => import('./LazyLoadedComponent').then(m => m.LazyLoadedComponent), // Example of a promise-based route
+      // ... other routes
+    });
+    ```
+
+* **Smooth Transitions with `router.deferUpdate()`**:
+    To prevent UI flickering or temporary empty states while an asynchronous component is loading, use `router.deferUpdate()`. This function allows you to tell the router to postpone the DOM update until a specific asynchronous operation (like fetch some data) is complete.
+
+    ```tsx
+    // Inside a component or a middleware function that might trigger an async load
+    router.deferUpdate(async () => {
+      // Perform your asynchronous operation here, e.g.,
+      // await fetchDataForRoute();
+      // await import('./MyHeavyComponent');
+    });
+    ```
+    The router will automatically show the previous route's content (or a loading indicator if you implement one) until all deferred promises are resolved, ensuring a smooth user experience.
+
+#### Error Handling and `useRouter` Options
+
+* **No Router Instance Error**: Calling `useRouter()` outside of a component rendered within `router.Provider()` will result in an error.
+* **Optional Router Context**: If a component needs to behave differently depending on whether it's within a router context or not, you can use the `{ optional: true }` option:
+    ```tsx
+    const MyComponent = Fluxel.createComponent(() => {
+      const router = useRouter({ optional: true });
+      if (!router) {
+        return Fluxel.p('This component is not within a router context.');
+      }
+      // ... use router as usual
+      return Fluxel.p(`Current route: ${router.pathname}`);
+    });
+    ```
+
 ### Server-Side Rendering (SSR) and Hydration
 
 Fluxel supports Server-Side Rendering (SSR) and hydration.
@@ -853,17 +1047,20 @@ Even without using a Virtual DOM, Fluxel employs a sophisticated "direct DOM rec
 
 When a list of child elements (the `children` property, which is a `ReactiveDependency` whose length or order may change) needs to be updated:
 
-1.  **Direct DOM Comparison**: Instead of creating and comparing a new virtual DOM tree, Fluxel directly compares the list of updated DOM nodes with the current live DOM nodes. This eliminates the overhead of a virtual DOM layer.
+* **Direct DOM Comparison**: Instead of creating and comparing a new virtual DOM tree, Fluxel directly compares the list of updated DOM nodes with the current live DOM nodes. This eliminates the overhead of a virtual DOM layer.
 
-2. **Smart Diffing Algorithm**:
+* **Smart Diffing Algorithm**:
 
-    * **Tail-based Optimization**: First, it checks for additions or removals at the beginning or end of the list. If `newChildren` matches the beginning or end of `currentChildren`, it performs highly efficient `appendChild`, `prepend`, or `removeChild` operations only on the changed elements.
+    * **Optimized for Node Instance Preservation**: The algorithm efficiently identifies existing DOM node instances using strict reference equality (`===`) or `Node.isSameNode()`. This is crucial for Fluxel's reactive system, ensuring that reactive dependencies and internal states are preserved when nodes are reused or moved.
 
-    * **Node Instance Preservation**: For more complex changes (e.g., intermediate elements, reordering), the algorithm leverages the stability of DOM node instances generated by Fluxel. It efficiently identifies existing nodes using `Node.isSameNode()`.
+    * **Longest Common Subsequence (LCS) Based**: For complex changes, including reordering and insertions/deletions of intermediate elements, Fluxel employs a sophisticated algorithm inspired by the Longest Common Subsequence (LCS) approach. It intelligently finds the longest sequence of common, ordered nodes between the old and new lists.
 
-    * **Minimal Operations**: It strategically removes mismatched nodes from their current positions and inserts new or moved nodes into their correct places. This ensures that only the absolutely necessary `appendChild`, `removeChild`, or `insertBefore` calls are executed, avoiding the costly "clear all and re-add" strategy.
+    * **Minimal & Precise DOM Operations**: Based on the identified common sequence, the algorithm strategically performs only the absolutely necessary DOM operations (`appendChild`, `removeChild`, `insertBefore`). This prevents costly "clear all and re-add" strategies and minimizes browser reflows and repaints, leading to highly efficient UI updates.
 
-3. **Stability through Memoization (and `isSameNode`)**:
+    * **Fast Lookups with Maps**: To further enhance performance for larger lists, the algorithm utilizes `Map` data structures for `O(1)` average-time complexity lookups of node indices, significantly speeding up the diffing process compared to linear searches.
+
+
+* **Stability through Memoization (and `isSameNode`)**:
     Fluxel's core philosophy is that DOM node instances are stable by default (because the `renderer` function is executed only once). This stability is crucial for direct DOM comparison using `Node.isSameNode()`. Furthermore, using `memo` (especially when `pure: true` is used for stable element instances, as in the ToDoApp's `li` element example) prevents unchanging child elements from being recreated even if `deriveFn` is re-executed, allowing the reconciliation algorithm to efficiently identify and preserve them in the DOM.
 
 This "direct DOM reconciliation algorithm," combined with the library's overall philosophy of stable DOM node instances, provides highly efficient updates for dynamic lists, often outperforming virtual DOM solutions by avoiding their inherent overhead.
