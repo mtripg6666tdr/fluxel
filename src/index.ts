@@ -110,7 +110,11 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
       if (styles[key] instanceof ReactiveDependency) {
         const dep = styles[key] as ReactiveDependency<any>;
         dep.addDependency(element, () => {
-          (element.style as any)[key] = dep.value;
+          if(key.startsWith("--")) {
+            element.style.setProperty(key, dep.value as string);
+          } else {
+            (element.style as any)[key] = dep.value;
+          }
         });
         styles[key] = dep.value;
       }
@@ -155,7 +159,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
             throw new TypeError("Cannot set value of classList directly");
           }
         }, (targetObj, dep) => {
-          attributesClassList.forEach(cls => cls instanceof ReactiveDependency && cls.addDependency(targetObj, () => dep));
+          attributesClassList.forEach(cls => cls instanceof ReactiveDependency && cls.addDependency(targetObj, dep));
         })
       : attributes.classList as CanBeReactive<string | DOMTokenList | (string | false | null | undefined)[] | Set<string | false | null | undefined>>;
 
@@ -203,6 +207,11 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
 
     if (element.style && styles) {
       Object.assign(element.style, styles);
+      Object.keys(styles).forEach(key => {
+        if (key.startsWith("--")) {
+          element.style.setProperty(key, styles[key as keyof typeof styles] as string);
+        }
+      });
     }
 
     if (element.dataset && datasets) {
@@ -464,7 +473,3 @@ tags.forEach(tag => {
 });
 
 export default Fluxel;
-
-export { ReactiveDependency };
-
-export type { FluxelComponent } from "./type.js";

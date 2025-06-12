@@ -29,11 +29,13 @@ await Promise.all(
           "fluxel-jsx-runtime.min.js": "JSX",
           "fluxel-reactive-router.min.js": "ROUTER",
           "fluxel-jsx-reactive-router.min.js": "JROUTER",
+          "fluxel-h.min.js": "HFACTORY",
+          "fluxel-ssr-client.min.js": "SSRCLIENT",
         }[file];
         if(id){
           markdown = markdown.replace(
-            new RegExp(`<!--${id}-->\\d\\.\\d+KB<!--${id}-->`),
-            `<!--${id}-->${(gzippedData.byteLength / 1024).toFixed(1)}KB<!--${id}-->`
+            new RegExp(`<!--${id}-->\\d\\.\\d+KB<!--${id}-->`, "g"),
+            `<!--${id}-->${(gzippedData.byteLength / 1024).toFixed(2)}KB<!--${id}-->`
           )
         }
       }

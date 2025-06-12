@@ -70,6 +70,15 @@ const buildConfigs = [
   },
   {
     entryPoints: [{
+      in: './dist/esm/ssr/client/index.js',
+      out: './dist/browser/fluxel-ssr-client.min',
+    }],
+    inject: ['./tools/injects/ssrClientBrowserInject.mjs'],
+    globalName: '__FluxelSSRClient_esm',
+    banner: banner('ssr-client'),
+  },
+  {
+    entryPoints: [{
       in: './dist/esm/reactive-router/index.js',
       out: './dist/browser/fluxel-reactive-router.min',
     }],

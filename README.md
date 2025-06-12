@@ -60,11 +60,13 @@ Fluxel is an ultra-lightweight and high-performance DOM-building library inspire
 * 🧩 **`Fluxel.fragment`**: A utility that allows grouping multiple children without introducing unnecessary wrapper elements in the DOM. It can intelligently propagate attributes (especially `classList` and event handlers) to its children.
 * 🏗️ **`Fluxel.createComponent` / `Fluxel.createStatefulComponent`**: Lightweight abstractions for defining reusable UI components. You can clearly define both stateless and reactive components.
 * 🍃 **Ultra-Compact & Build-Free Modular Design**: Fluxel boasts an incredibly tiny footprint, achieved through its zero-dependency and modular design. It's engineered to be ultra-compact at runtime. You can selectively import features to keep your app lean:
-  * **Core**: around **<!--CORE-->3.1KB<!--CORE-->** (gzipped)
-  * **Reactive Core**: around **<!--RCORE-->4.2KB<!--RCORE-->** (gzipped)
-  * **Reactive Core with JSX Support**: around **<!--JSX-->4.3KB<!--JSX-->** (gzipped)
-  * **Reactive Core with Router**: around **<!--ROUTER-->5.3KB<!--ROUTER-->** (gzipped)
-  * **Reactive Core with JSX and Router**: around **<!--JROUTER-->5.5KB<!--JROUTER-->** (gzipped)
+  * **Core**: around **<!--CORE-->3.17KB<!--CORE-->** (gzipped)
+  * **Reactive Core**: around **<!--RCORE-->4.19KB<!--RCORE-->** (gzipped)
+  * **Reactive Core with JSX Support**: around **<!--JSX-->4.31KB<!--JSX-->** (gzipped)
+  * **Reactive Core with Router**: around **<!--ROUTER-->5.36KB<!--ROUTER-->** (gzipped)
+  * **Reactive Core with JSX and Router**: around **<!--JROUTER-->5.53KB<!--JROUTER-->** (gzipped)
+  * **Hyperscript-compatible `h` function factory**: + around **<!--HFACTORY-->0.81KB<!--HFACTORY-->** (gzipped)
+  * **Hydration for SSR**: + around **<!--SSRCLIENT-->1.10KB<!--SSRCLIENT-->** (gzipped)
 
 ## Installation
 
@@ -81,12 +83,20 @@ Fluxel provides multiple import modules based on your needs:
 
 |                                    | Without Reactivity | With Reactivity              | With Reactivity and Router   |
 | :--------------------------------: | :----------------: | :--------------------------: | :--------------------------: |
-| **Functional API**                 |      `fluxel`      | `fluxel/reactive`            |  `fluxel/reactive-router`    |
+| **Functional API**                 |      `fluxel`\*    | `fluxel/reactive`\*          |  `fluxel/reactive-router`\*  |
 | **JSX Syntax (New JSX Transform)** |         -          | `fluxel/jsx-reactive`        | `fluxel/jsx-reactive-router` |
 | **JSX Syntax (Old JSX Transform)** |         -          | `fluxel/jsx-reactive-legacy` |             -                |
 
 All APIs available in `fluxel` are also available in the other modules.
 You can choose and import just one of these.
+
+If you have more specific development needs, some of these optional modules may be needed.
+|                                                 | Module                |
+| :---------------------------------------------: | :-------------------: |
+| **Hyperscript-compatible `h` function factory** | `fluxel/h`\*          |
+| **Hydration feature for SSR**                   | `fluxel/ssr/client`\* |
+
+* Modules with the asterisk (`*`) are also available via CDN. See [Installation via CDN](#installation-via-cdn) for more details.
 
 Fluxel supports both CommonJS and ESModules. If using CommonJS, note that the `default` property corresponds to the default export of ESModules:
 
@@ -145,11 +155,17 @@ Instead of installing via package managers like npm, you can load it directly in
   <script src="https://cdn.jsdelivr.net/npm/fluxel@x.x/dist/browser/fluxel-reactive-router.min.js"></script>
   ```
 
-* If you plan to use [htm](https://npmjs.com/package/htm) or similar libraries for JSX-like syntax without a build step,
-  include the following together with one of above tags in your `<head>` to load the Hyperscript-compatible h function factory.
-  ```html
-  <script src="https://cdn.jsdelivr.net/npm/fluxel@x.x/dist/browser/fluxel-h.min.js"></script>
-  ```
+* **Optional modules**:
+  * If you plan to use [htm](https://npmjs.com/package/htm) or similar libraries for JSX-like syntax without a build step,
+    include the following together with one of above tags in your `<head>` to load the Hyperscript-compatible h function factory.
+    ```html
+    <script src="https://cdn.jsdelivr.net/npm/fluxel@x.x/dist/browser/fluxel-h.min.js"></script>
+    ```
+
+  * If you need the hydration feature for SSR, include the folloing together with one of above tags in your `<head>`.
+    ```html
+    <script src="https://cdn.jsdelivr.net/npm/fluxel@x.x/dist/browser/fluxel-ssr-client.min.js"></script>
+    ```
 
 For ES Modules usage, you can import Fluxel directly from [esm.run](https://www.jsdelivr.com/esm). This is useful when you want to use `import` statements in your browser-side JavaScript without a bundler.
 
@@ -168,10 +184,15 @@ For ES Modules usage, you can import Fluxel directly from [esm.run](https://www.
   import Fluxel from 'https://esm.run/fluxel@x.x/reactive-router';
   ```
 
-* If you need the the Hyperscript-compatible h function factory for [htm](https://npmjs.com/package/htm) or similar libraries:
-  ```js
-  import FluxelHFactory from 'https://esm.run/fluxel@x.x/h';
-  ```
+* **Optional modules**:
+  * If you need the the Hyperscript-compatible h function factory for [htm](https://npmjs.com/package/htm) or similar libraries:
+    ```js
+    import FluxelHFactory from 'https://esm.run/fluxel@x.x/h';
+    ```
+  * If you need the hydration feature for SSR:
+    ```js
+    import hydrate from 'https://esm.run/fluxel@x.x/ssr/client';
+    ```
 
 Please replace `x.x` with the appropriate version number for all CDN and ES Modules links.
 
@@ -857,19 +878,28 @@ import renderToString from "fluxel/ssr";
 // Signature
 function renderToString(
   renderer: () => Node | FluxelJSXElement,
-  reactive?: boolean,
-  metadata?: string,
+  options?: {
+    reactive?: boolean,
+    metadata?: string,
+    pathname?: string,
+    search?: string,
+    hash?: string,
+  }
 ): { dom: string; style: string; };
 ```
-1. **renderer**:
+1. **`renderer`**:
    * Type: `() => Node | FluxelJSXElement`
    * Description: A function that returns the root element of the Fluxel component you want to render.  
-2. **reactive (Optional)**:
+2. **`options.reactive` (Optional)**:
    * Type: `boolean`
    * Description: Whether the Fluxel component you want to render has reactivity or not. Hydration is not available unless `reactive` set to `true`.
-3. **metadata (Optional)**:
+3. **`options.metadata` (Optional)**:
    * Type: `string`
    * Description: This string is added as a data-fluxel-metadata attribute to the root element of the rendered HTML (e.g., div or section). It can be used to pass specific information or state during client-side hydration.
+4. **`options.pathname`, `options.search`, `options.hash` (Optional)**:
+   * Type: `string`
+   * Description: These will be used as the location of the page while rendering. These are useful if you use the client-side router feature.
+      * Don't include `?` at the beginnig of `options.search` as well `#` at the beginning of `options.hash`.
 
 **Return Value:**
 
@@ -877,7 +907,7 @@ renderToString returns an object with the following properties:
 
 * **dom**:  
   * Type: `string`  
-  * Description: The HTML string of the rendered component. The content of this dom can be placed under the application's root element (e.g., &lt;div id="app"&gt;&lt;/div&gt;) to generate a complete HTML page.  
+  * Description: The HTML string of the rendered component. It can be placed within the application's root element (e.g., `<div id="app"></div>`) to generate a complete HTML page as the result of server-side rendering.  
 * **style**:  
   * Type: `string`  
   * Description: A concatenated string of all CSS strings inserted by the Fluxel.forwardStyle function during SSR execution. This can be directly embedded in the HTML's &lt;head&gt; section to ensure style application on the client side.
@@ -1027,7 +1057,7 @@ Fluxel's SSR and hydration perform "Index-Based Hydration" for lightweight and h
    * **Event Handlers Only**: Only event handlers are attached to the retrieved elements.  
    * **Attribute/Style Skipping**: Attribute and style settings/comparisons are not performed. This assumes that the server-side generated state is correct.  
    * **Reactivity Establishment**: Although attribute and style settings are skipped, internal operations to make the elements reactive are performed. This allows for reusing existing DOM while building an interactive UI.  
-   * **Root Element Flexibility**: Even if rootElement does not directly have the [data-fluxel-ssr] attribute, hydrate automatically searches for the immediate child with the [data-fluxel-ssr] attribute and starts hydration.
+   * **Root Element Flexibility**: Even if rootElement does not directly have the `[data-fluxel-ssr]` attribute, hydrate automatically searches for the immediate child with the `[data-fluxel-ssr]` attribute and starts hydration.
 
 3. **Important Development Considerations**
 

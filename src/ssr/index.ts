@@ -3,9 +3,21 @@ import ensureNode from "../jsxEnsureNode.js";
 import type { FluxelJSXElement } from "../type.js";
 import Fluxel from "../index.js";
 
-export default function renderToString(renderer: () => FluxelJSXElement | Node, reactive?: boolean, metadata?: string): { dom: string, style: string } {
-  const jsdom = new JSDOM();
-  reactive = !!reactive;
+type RenderToStringOptions = {
+  reactive?: boolean,
+  metadata?: string,
+  pathname?: string,
+  search?: string,
+  hash?: string,
+};
+
+export default function renderToString(renderer: () => FluxelJSXElement | Node, options: RenderToStringOptions = {}): { dom: string, style: string } {
+  const metadata = options?.metadata;
+  const reactive = !!options?.reactive;
+  const query = options?.search || "";
+  const hash = options?.hash || "";
+  const url = `http://localhost.dummy${options?.pathname || "/"}${query ? `?${query}` : ""}${hash ? `#${hash}` : ""}`;
+  const jsdom = new JSDOM("", { url });
 
   const renderingContext = {
     createElementCount: 0,
@@ -28,23 +40,22 @@ export default function renderToString(renderer: () => FluxelJSXElement | Node, 
 
   Object.defineProperties(global, {
     Node: {
-      get() {
-        return jsdom.window.Node;
-      },
+      get: () => jsdom.window.Node,
       configurable: true,
       enumerable: false,
     },
     HTMLElement: {
-      get() {
-        return jsdom.window.HTMLElement;
-      },
+      get: () => jsdom.window.HTMLElement,
       configurable: true,
       enumerable: false,
     },
     document: {
-      get() {
-        return document;
-      },
+      get: () => document,
+      configurable: true,
+      enumerable: false,
+    },
+    location: {
+      get: () => jsdom.window.location,
       configurable: true,
       enumerable: false,
     },
@@ -82,6 +93,11 @@ export default function renderToString(renderer: () => FluxelJSXElement | Node, 
       enumerable: false,
     },
     document: {
+      value: null,
+      configurable: true,
+      enumerable: false,
+    },
+    location: {
       value: null,
       configurable: true,
       enumerable: false,

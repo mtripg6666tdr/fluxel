@@ -1,5 +1,7 @@
 import type ReactiveDependency from "./reactiveDependency.js";
 
+export type { ReactiveDependency };
+
 export type NotFunctionProps<T> = {
   [key in keyof T]: Exclude<T[key], null | undefined> extends Function
   ? never

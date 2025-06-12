@@ -98,7 +98,7 @@ export function createRouter(config: RouteConfig, options: RouterOptions = {}): 
         };
 
         const updateChildren = () => {
-          const url = new URL(window.location.href);
+          const url = new URL(location.href);
           const path = mode === "history"
             ? url.pathname.replace(basePath, "")
             : url.hash.replace(/^#/, "").replace(basePath, "");
