@@ -64,7 +64,7 @@ Fluxel is an ultra-lightweight and high-performance DOM-building library inspire
   * **Core**: around **<!--CORE-->3.17KB<!--CORE-->** (gzipped)
   * **Reactive Core**: around **<!--RCORE-->4.25KB<!--RCORE-->** (gzipped)
   * **Reactive Core with JSX Support**: around **<!--JSX-->4.37KB<!--JSX-->** (gzipped)
-  * **Reactive Core with Router**: around **<!--ROUTER-->5.42KB<!--ROUTER-->** (gzipped)
+  * **Reactive Core with Router**: around **<!--ROUTER-->5.45KB<!--ROUTER-->** (gzipped)
   * **Reactive Core with JSX and Router**: around **<!--JROUTER-->5.59KB<!--JROUTER-->** (gzipped)
   * **Hyperscript-compatible `h` function factory**: + around **<!--HFACTORY-->0.81KB<!--HFACTORY-->** (gzipped)
   * **Hydration for SSR**: + around **<!--SSRCLIENT-->1.10KB<!--SSRCLIENT-->** (gzipped)
