@@ -53,11 +53,12 @@ const buildConfigs = [
   },
   {
     entryPoints: [{
-        in: './dist/esm/jsx-runtime/index.js',
-        out: './dist/browser/fluxel-jsx-runtime.min',
+      in: './dist/esm/reactive-router/index.js',
+      out: './dist/browser/fluxel-reactive-router.min',
     }],
-    globalName: 'FluxelJSXRuntime',
-    banner: banner('jsx-runtime'),
+    inject: ['./tools/injects/fluxelBrowserInject.mjs'],
+    globalName: '__Fluxel_esm',
+    banner: banner('reactive-router'),
   },
   {
     entryPoints: [{
@@ -77,13 +78,15 @@ const buildConfigs = [
     globalName: '__FluxelSSRClient_esm',
     banner: banner('ssr-client'),
   },
+
+  // Bundles only for calculating size, not ready for production use
   {
     entryPoints: [{
-      in: './dist/esm/reactive-router/index.js',
-      out: './dist/browser/fluxel-reactive-router.min',
+        in: './dist/esm/jsx-runtime/index.js',
+        out: './dist/browser/fluxel-jsx-runtime.min',
     }],
-    globalName: 'FluxelRouter',
-    banner: banner('router'),
+    globalName: 'FluxelJSXRuntime',
+    banner: banner('jsx-runtime'),
   },
   {
     entryPoints: [{
