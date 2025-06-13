@@ -61,10 +61,10 @@ Fluxel is an ultra-lightweight and high-performance DOM-building library inspire
 * 🏗️ **`Fluxel.createComponent` / `Fluxel.createStatefulComponent`**: Lightweight abstractions for defining reusable UI components. You can clearly define both stateless and reactive components.
 * 🍃 **Ultra-Compact & Build-Free Modular Design**: Fluxel boasts an incredibly tiny footprint, achieved through its zero-dependency and modular design. It's engineered to be ultra-compact at runtime. You can selectively import features to keep your app lean:
   * **Core**: around **<!--CORE-->3.17KB<!--CORE-->** (gzipped)
-  * **Reactive Core**: around **<!--RCORE-->4.19KB<!--RCORE-->** (gzipped)
-  * **Reactive Core with JSX Support**: around **<!--JSX-->4.31KB<!--JSX-->** (gzipped)
-  * **Reactive Core with Router**: around **<!--ROUTER-->5.36KB<!--ROUTER-->** (gzipped)
-  * **Reactive Core with JSX and Router**: around **<!--JROUTER-->5.53KB<!--JROUTER-->** (gzipped)
+  * **Reactive Core**: around **<!--RCORE-->4.25KB<!--RCORE-->** (gzipped)
+  * **Reactive Core with JSX Support**: around **<!--JSX-->4.37KB<!--JSX-->** (gzipped)
+  * **Reactive Core with Router**: around **<!--ROUTER-->5.42KB<!--ROUTER-->** (gzipped)
+  * **Reactive Core with JSX and Router**: around **<!--JROUTER-->5.59KB<!--JROUTER-->** (gzipped)
   * **Hyperscript-compatible `h` function factory**: + around **<!--HFACTORY-->0.81KB<!--HFACTORY-->** (gzipped)
   * **Hydration for SSR**: + around **<!--SSRCLIENT-->1.10KB<!--SSRCLIENT-->** (gzipped)
 

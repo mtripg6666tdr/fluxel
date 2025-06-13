@@ -3,12 +3,19 @@ import { targetListenerMap } from "./internalStore.js";
 import ReactiveDependency from "./reactiveDependency.js";
 import type { ChildrenType, StateParam, ReactiveDependencyUse, MemoizeFunction, TypedEventTarget, StateParamListenTargetEventType, FluxelJSXElement, CanBeReactive } from "./type.js";
 
+interface MergeDependencies {
+  <T, U, V>(dep0: ReactiveDependency<T>, dep1: ReactiveDependency<U>, dep2: ReactiveDependency<V>): ReactiveDependency<[T, U, V]>;
+  <T, U>(dep0: ReactiveDependency<T>, dep1: ReactiveDependency<U>): ReactiveDependency<[T, U]>;
+  <T>(...deps: ReactiveDependency<T>[]): ReactiveDependency<T[]>;
+}
+
 const Fluxel = BaseFluxel as typeof BaseFluxel & {
   reactive: <T extends object, R extends CanBeReactive<ChildrenType | FluxelJSXElement>>(
     initialState: T,
     renderer: (stateParam: StateParam<T>) => R,
   ) => R;
   schedule: (fn: () => void) => void;
+  mergeDependencies: MergeDependencies;
 };
 
 export const pureStateReservedKeys = ["render", "use", "useWithMemo", "listenTarget"] as const;
@@ -95,18 +102,8 @@ Fluxel.reactive = function <T extends object, R extends CanBeReactive<ChildrenTy
             throw new TypeError("Invalid");
           }
         }, (targetObj, dep) => {
-          let depCallPending = false;
-          // Throttle the dependency calls to avoid too many updates in a single render cycle
-          const throttleDep = () => {
-            if (depCallPending) return;
-            depCallPending = true;
-            // Use setTimeout to ensure the dependent listener is called in the next event loop cycle
-            window.setTimeout(() => {
-              depCallPending = false;
-              dep();
-            }, 0);
-          };
-          entries.forEach((entry) => entry[1].addDependency(targetObj, throttleDep));
+          const throttledDep = createThrottledDep(dep);
+          entries.forEach((entry) => entry[1].addDependency(targetObj, throttledDep));
         }).derive(memorableDeriveFn!) as ReactiveDependency<R>;
       } else {
         let dep: ReactiveDependency<T[K]> | undefined;
@@ -184,6 +181,35 @@ Fluxel.schedule = function (fn: () => void): void {
   if(typeof window !== "undefined"){
     setTimeout(fn, 0);
   }
+}
+
+Fluxel.mergeDependencies = function <T>(...deps: ReactiveDependency<T>[]): ReactiveDependency<T[]> {
+  return new ReactiveDependency<T[]>(
+    {
+      get: () => deps.map(dep => dep.value),
+      set: (val: T[]) => {
+        throw new TypeError("Invalid operation");
+      }
+    },
+    (targetObj, dep) => {
+      const throttledDep = createThrottledDep(dep);
+      deps.forEach(d => d.addDependency(targetObj, throttledDep));
+    }
+  );
+} as MergeDependencies;
+
+function createThrottledDep(dep: () => void): () => void {
+  let depCallPending = false;
+  // Throttle the dependency calls to avoid too many updates in a single render cycle
+  return () => {
+    if (depCallPending) return;
+    depCallPending = true;
+    // Use setTimeout to ensure the dependent listener is called in the next event loop cycle
+    window.setTimeout(() => {
+      depCallPending = false;
+      dep();
+    }, 0);
+  };
 }
 
 export default Fluxel;
