@@ -141,7 +141,7 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
       } else if (cls instanceof ReactiveDependency) {
         const dep = cls as ReactiveDependency<string | DOMTokenList | string[] | Set<string>>;
         dep.addDependency(element, () => {
-          element.classList.forEach(cls => element.classList.remove(cls));
+          element.className = "";
           classList.clear();
           addClassList(dep.value);
           classList.forEach(cls => element.classList.add(cls));

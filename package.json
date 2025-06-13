@@ -1,6 +1,6 @@
 {
   "name": "fluxel",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "An ultra-lightweight, high-performance library for efficient DOM building and dynamic web UIs",
   "keywords": [
     "ui-library",
