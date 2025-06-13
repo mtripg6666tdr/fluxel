@@ -5,6 +5,7 @@ Fluxel is an ultra-lightweight and high-performance DOM-building library inspire
 - [Table of Contents](#table-of-contents)
 - [Features](#features)
 - [Installation](#installation)
+  - [Installation via package managers](#installation-via-package-managers)
   - [Importing](#importing)
   - [JSX Setup](#jsx-setup)
   - [Installation via CDN](#installation-via-cdn)
@@ -69,6 +70,10 @@ Fluxel is an ultra-lightweight and high-performance DOM-building library inspire
   * **Hydration for SSR**: + around **<!--SSRCLIENT-->1.10KB<!--SSRCLIENT-->** (gzipped)
 
 ## Installation
+**Instead of reading through the detailed installation instructions below,**
+**you can use our interactive [Import Assistant](https://static-objects.usamyon.moe/fluxel_temporary/index.html) for a personalized guide.**
+
+### Installation via package managers
 
 ```sh
 npm install fluxel
