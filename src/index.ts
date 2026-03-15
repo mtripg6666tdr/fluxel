@@ -301,8 +301,12 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
   if (children) {
     if (isHydrating) {
       children.forEach((child, index) => {
-        if(child instanceof Text) {
-          element.replaceChild(child, element.childNodes[index]!);
+        if (child instanceof Text) {
+          if (element.childNodes[index] && element.childNodes[index] instanceof Text) {
+            element.replaceChild(child, element.childNodes[index]);
+          } else {
+            element.insertBefore(child, element.childNodes[index]);
+          }
         }
       });
     } else {
