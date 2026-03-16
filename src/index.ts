@@ -223,8 +223,8 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
     }
   }
 
-  if (variableChildrenLength && originalChildren) {
-    (originalChildren as unknown as ReactiveDependency<FixedLengthChildrenType[]>).addDependency(element, () => {
+  if (variableChildrenLength && originalChildren && originalChildren instanceof ReactiveDependency) {
+    (originalChildren as ReactiveDependency<FixedLengthChildrenType[]>).addDependency(element, () => {
       const currentChildren = spreadHTMLCollection(element.childNodes);
       const newChildren = normalizeChildren(originalChildren).children;
       const currentChildrenMap = arrayToMap(currentChildren);
@@ -323,7 +323,11 @@ function applyProps<K extends keyof HTMLElementTagNameMap>(
   return element;
 }
 
-function normalizeChildren(children: ChildrenType): { children: Node[], variableChildrenLength: boolean, reactiveIndex: number[] } {
+function normalizeChildren(children: ChildrenType): {
+  children: Node[],
+  variableChildrenLength: boolean,
+  reactiveIndex: number[],
+} {
   // indicates if children are fully reactive, meaning children length is variable and can change
   let variableChildrenLength = false;
   // an array of indices of children that are reactive, meaning they can change Node type but the length is fixed
@@ -371,7 +375,11 @@ function normalizeChildren(children: ChildrenType): { children: Node[], variable
     }
   };
 
-  return { children: normalizeChildrenInternal(children), variableChildrenLength, reactiveIndex };
+  return {
+    children: normalizeChildrenInternal(children),
+    variableChildrenLength,
+    reactiveIndex,
+  };
 }
 
 fluxelInternal.fragment = function <T extends Node = Node, C extends ChildrenType<T> = ChildrenType<T>>(
@@ -383,23 +391,31 @@ fluxelInternal.fragment = function <T extends Node = Node, C extends ChildrenTyp
   const variableChildrenLength = normalizedChildrenResult.variableChildrenLength;
   const reactiveIndex = normalizedChildrenResult.reactiveIndex;
 
-  const result = transformedChildren as (Node | ReactiveDependency<Node>)[];
+  if (variableChildrenLength && children instanceof ReactiveDependency) {
+    return (children as ReactiveDependency<ChildrenType>).derive(v => {
+      const result = normalizeChildren(v).children;
 
-  result.forEach(child => {
-    if (child instanceof HTMLElement) {
-      applyProps(child, options);
-    }
-  });
+      result.forEach(child => applyProps(child as HTMLElement, options));
 
-  if (variableChildrenLength) {
-    return (children as ReactiveDependency<ChildrenType>).derive(() => transformedChildren) as any;
-  } else if (reactiveIndex.length > 0) {
-    for (const index of reactiveIndex) {
-      result[index] = ((children as any)[index] as ReactiveDependency<Node>).derive(() => transformedChildren[index]);
+      return result;
+    }) as any;
+  } else {
+    const result = transformedChildren as (Node | ReactiveDependency<Node>)[];
+
+    result.forEach(child => {
+      if (child instanceof HTMLElement) {
+        applyProps(child, options);
+      }
+    });
+
+    if (reactiveIndex.length > 0) {
+      for (const index of reactiveIndex) {
+        result[index] = ((children as any)[index] as ReactiveDependency<Node>).derive(v => applyProps(v as HTMLElement, options) as Node);
+      }
     }
+
+    return result as any;
   }
-
-  return result as any;
 };
 
 function getFluxelStyleElement(): HTMLStyleElement {
